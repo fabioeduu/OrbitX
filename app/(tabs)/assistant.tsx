@@ -1,7 +1,6 @@
-// app/(tabs)/assistant.tsx
-
-import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { LinearGradient } from "expo-linear-gradient";
+import { SendHorizontal, Sparkles } from "lucide-react-native";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -11,17 +10,16 @@ import {
   Text,
   TextInput,
   View,
-} from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import { SendHorizontal, Sparkles } from 'lucide-react-native';
+} from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
-import { AnimatedHeader } from '../../components/AnimatedHeader';
-import { GlassContainer } from '../../components/GlassContainer';
-import { useColors } from '../../constants/Colors';
-import { useThemeStore } from '../../store/theme';
-import { sleep } from '../../utils/sleep';
+import { AnimatedHeader } from "../../components/AnimatedHeader";
+import { GlassContainer } from "../../components/GlassContainer";
+import { useColors } from "../../constants/Colors";
+import { useThemeStore } from "../../store/theme";
+import { sleep } from "../../utils/sleep";
 
-type Role = 'user' | 'assistant';
+type Role = "user" | "assistant";
 
 type Msg = {
   id: string;
@@ -30,70 +28,59 @@ type Msg = {
 };
 
 const SUGGESTIONS = [
-  'Resumo dos KPIs agora',
-  'Como reduzir 10% do consumo?',
-  'Risco térmico nas próximas 3h',
+  "Resumo dos KPIs agora",
+  "Como reduzir 10% do consumo?",
+  "Risco térmico nas próximas 3h",
 ];
 
 function makeReply(prompt: string) {
   const p = prompt.toLowerCase();
 
-  if (p.includes('kpi') || p.includes('resumo')) {
+  if (p.includes("kpi") || p.includes("resumo")) {
     return (
-      'Resumo: consumo 742 kW (-3.1%), temperatura 36.8°C (estável), ' +
-      'carbono 1.42 tCO₂e (-1.8%), eficiência 92% (+0.7%). ' +
-      'Recomendo ajustar setpoints em +0.6°C nas zonas frias para reduzir ' +
-      'consumo sem risco térmico.'
+      "Resumo: consumo 742 kW (-3.1%), temperatura 36.8°C (estável), " +
+      "carbono 1.42 tCO₂e (-1.8%), eficiência 92% (+0.7%). " +
+      "Recomendo ajustar setpoints em +0.6°C nas zonas frias para reduzir " +
+      "consumo sem risco térmico."
     );
   }
 
-  if (p.includes('reduzir') || p.includes('10%')) {
+  if (p.includes("reduzir") || p.includes("10%")) {
     return (
-      'Para reduzir ~10%: (1) otimizar setpoints +0.5°C em zonas estáveis, ' +
-      '(2) aplicar fan curves com controle preditivo, ' +
-      '(3) migrar workloads batch para janelas com menor fator de emissão, ' +
-      '(4) habilitar pre-cooling antes de picos térmicos.'
+      "Para reduzir ~10%: (1) otimizar setpoints +0.5°C em zonas estáveis, " +
+      "(2) aplicar fan curves com controle preditivo, " +
+      "(3) migrar workloads batch para janelas com menor fator de emissão, " +
+      "(4) habilitar pre-cooling antes de picos térmicos."
     );
   }
 
-  if (p.includes('risco') || p.includes('3h')) {
+  if (p.includes("risco") || p.includes("3h")) {
     return (
-      'Risco térmico nas próximas 3h: baixo. Pequena elevação prevista em ' +
-      'EU (Frankfurt) por umidade/temperatura externa. Mitigação: ativar ' +
-      'pre-cooling leve e redistribuir cargas de alta densidade.'
+      "Risco térmico nas próximas 3h: baixo. Pequena elevação prevista em " +
+      "EU (Frankfurt) por umidade/temperatura externa. Mitigação: ativar " +
+      "pre-cooling leve e redistribuir cargas de alta densidade."
     );
   }
 
   return (
-    'Entendi. Quer que eu analise por região (Mapa), por satélite/clima ' +
-    '(Orbital) ou por economia/ESG (Métricas)?'
+    "Entendi. Quer que eu analise por região (Mapa), por satélite/clima " +
+    "(Orbital) ou por economia/ESG (Métricas)?"
   );
 }
 
-function Bubble({
-  role,
-  text,
-}: {
-  role: Role;
-  text: string;
-}) {
+function Bubble({ role, text }: { role: Role; text: string }) {
   const colors = useColors();
   const mode = useThemeStore((s) => s.mode);
 
-  const isUser = role === 'user';
+  const isUser = role === "user";
 
-  const userBg = 'rgba(59,130,246,0.18)';
-  const userBorder = 'rgba(59,130,246,0.30)';
+  const userBg = "rgba(59,130,246,0.18)";
+  const userBorder = "rgba(59,130,246,0.30)";
 
-  const aiBg =
-    mode === 'dark'
-      ? 'rgba(255,255,255,0.06)'
-      : 'rgba(0,0,0,0.05)';
+  const aiBg = mode === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
 
   const aiBorder =
-    mode === 'dark'
-      ? 'rgba(255,255,255,0.12)'
-      : 'rgba(0,0,0,0.10)';
+    mode === "dark" ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)";
 
   return (
     <View
@@ -101,12 +88,12 @@ function Bubble({
         styles.bubble,
         isUser
           ? {
-              alignSelf: 'flex-end',
+              alignSelf: "flex-end",
               backgroundColor: userBg,
               borderColor: userBorder,
             }
           : {
-              alignSelf: 'flex-start',
+              alignSelf: "flex-start",
               backgroundColor: aiBg,
               borderColor: aiBorder,
             },
@@ -115,7 +102,7 @@ function Bubble({
       <Text
         style={{
           color: colors.softWhite,
-          fontFamily: 'Inter_400Regular',
+          fontFamily: "Inter_400Regular",
           fontSize: 13,
           lineHeight: 18,
         }}
@@ -132,22 +119,22 @@ export default function AssistantScreen() {
 
   const listRef = useRef<FlatList<Msg>>(null);
 
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
 
   const [messages, setMessages] = useState<Msg[]>([
     {
-      id: 'm-0',
-      role: 'assistant',
+      id: "m-0",
+      role: "assistant",
       text:
-        'Olá! Sou a Orbit AI. Posso analisar KPIs, riscos térmicos e ' +
-        'sugerir otimizações para reduzir energia e carbono.',
+        "Olá! Sou a Orbit AI. Posso analisar KPIs, riscos térmicos e " +
+        "sugerir otimizações para reduzir energia e carbono.",
     },
   ]);
 
   const canSend = useMemo(
     () => input.trim().length > 0 && !typing,
-    [input, typing]
+    [input, typing],
   );
 
   const send = useCallback(async (text: string) => {
@@ -158,13 +145,13 @@ export default function AssistantScreen() {
     setMessages((prev) => [
       {
         id: `u-${Date.now()}`,
-        role: 'user',
+        role: "user",
         text: value,
       },
       ...prev,
     ]);
 
-    setInput('');
+    setInput("");
     setTyping(true);
 
     await sleep(650);
@@ -172,7 +159,7 @@ export default function AssistantScreen() {
     setMessages((prev) => [
       {
         id: `a-${Date.now()}`,
-        role: 'assistant',
+        role: "assistant",
         text: makeReply(value),
       },
       ...prev,
@@ -189,32 +176,28 @@ export default function AssistantScreen() {
   }, []);
 
   const gradientColors: [string, string, string, string] =
-    mode === 'dark'
+    mode === "dark"
       ? [
           colors.deepBlack,
-          'rgba(59,130,246,0.10)',
-          'rgba(34,197,94,0.08)',
+          "rgba(59,130,246,0.10)",
+          "rgba(34,197,94,0.08)",
           colors.deepBlack,
         ]
       : [
           colors.deepBlack,
-          'rgba(59,130,246,0.05)',
-          'rgba(34,197,94,0.04)',
+          "rgba(59,130,246,0.05)",
+          "rgba(34,197,94,0.04)",
           colors.deepBlack,
         ];
 
   const suggestionBg =
-    mode === 'dark'
-      ? 'rgba(255,255,255,0.06)'
-      : 'rgba(0,0,0,0.05)';
+    mode === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
 
   const suggestionBorder =
-    mode === 'dark'
-      ? 'rgba(255,255,255,0.12)'
-      : 'rgba(0,0,0,0.10)';
+    mode === "dark" ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)";
 
-  const sendBg = 'rgba(59,130,246,0.16)';
-  const sendBorder = 'rgba(59,130,246,0.30)';
+  const sendBg = "rgba(59,130,246,0.16)";
+  const sendBorder = "rgba(59,130,246,0.30)";
 
   return (
     <View
@@ -244,35 +227,27 @@ export default function AssistantScreen() {
         keyExtractor={(m) => m.id}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
-          <Animated.View
-            entering={FadeInDown.duration(260)}
-          >
-            <Bubble
-              role={item.role}
-              text={item.text}
-            />
+          <Animated.View entering={FadeInDown.duration(260)}>
+            <Bubble role={item.role} text={item.text} />
           </Animated.View>
         )}
         ListHeaderComponent={
           typing ? (
             <View
               style={{
-                flexDirection: 'row',
-                alignItems: 'center',
+                flexDirection: "row",
+                alignItems: "center",
                 gap: 8,
                 paddingHorizontal: 22,
                 paddingVertical: 10,
               }}
             >
-              <Sparkles
-                size={14}
-                color={colors.neonGreen}
-              />
+              <Sparkles size={14} color={colors.neonGreen} />
 
               <Text
                 style={{
                   color: colors.premiumGray,
-                  fontFamily: 'Inter_400Regular',
+                  fontFamily: "Inter_400Regular",
                   fontSize: 12,
                 }}
               >
@@ -284,16 +259,12 @@ export default function AssistantScreen() {
       />
 
       <KeyboardAvoidingView
-        behavior={
-          Platform.OS === 'ios'
-            ? 'padding'
-            : undefined
-        }
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View
           style={{
-            flexDirection: 'row',
-            flexWrap: 'wrap',
+            flexDirection: "row",
+            flexWrap: "wrap",
             gap: 10,
             paddingHorizontal: 22,
             paddingBottom: 10,
@@ -315,7 +286,7 @@ export default function AssistantScreen() {
               <Text
                 style={{
                   color: colors.softWhite,
-                  fontFamily: 'Inter_500Medium',
+                  fontFamily: "Inter_500Medium",
                   fontSize: 12,
                 }}
               >
@@ -325,10 +296,7 @@ export default function AssistantScreen() {
           ))}
         </View>
 
-        <GlassContainer
-          style={styles.inputWrap}
-          intensity={25}
-        >
+        <GlassContainer style={styles.inputWrap} intensity={25}>
           <TextInput
             value={input}
             onChangeText={setInput}
@@ -351,22 +319,18 @@ export default function AssistantScreen() {
                 width: 40,
                 height: 40,
                 borderRadius: 16,
-                alignItems: 'center',
-                justifyContent: 'center',
+                alignItems: "center",
+                justifyContent: "center",
                 backgroundColor: sendBg,
                 borderColor: sendBorder,
-                borderWidth:
-                  StyleSheet.hairlineWidth,
+                borderWidth: StyleSheet.hairlineWidth,
               },
               !canSend && {
                 opacity: 0.5,
               },
             ]}
           >
-            <SendHorizontal
-              size={18}
-              color={colors.softWhite}
-            />
+            <SendHorizontal size={18} color={colors.softWhite} />
           </Pressable>
         </GlassContainer>
       </KeyboardAvoidingView>
@@ -389,7 +353,7 @@ const styles = StyleSheet.create({
   },
 
   bubble: {
-    maxWidth: '90%',
+    maxWidth: "90%",
     paddingVertical: 12,
     paddingHorizontal: 12,
     borderRadius: 18,
@@ -401,8 +365,8 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
+    flexDirection: "row",
+    alignItems: "flex-end",
     gap: 10,
   },
 
@@ -410,7 +374,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 40,
     maxHeight: 110,
-    fontFamily: 'Inter_400Regular',
+    fontFamily: "Inter_400Regular",
     fontSize: 13,
     lineHeight: 18,
   },

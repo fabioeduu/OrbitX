@@ -1,8 +1,3 @@
-// app/(tabs)/satellite.tsx
-// API: https://api.wheretheiss.at/v1/satellites/25544
-// Sem API key. Campos usados: latitude, longitude, altitude,
-// velocity (km/h), visibility, footprint, solar_lat, timestamp.
-
 import { LinearGradient } from "expo-linear-gradient";
 import {
     Activity,
@@ -45,8 +40,6 @@ import { AnimatedHeader } from "../../components/AnimatedHeader";
 import { PremiumCard } from "../../components/PremiumCard";
 import { OrbitColors } from "../../constants/Colors";
 
-// ─── Tipos ────────────────────────────────────────────────────────────────────
-
 type ISSData = {
   latitude: number;
   longitude: number;
@@ -58,16 +51,12 @@ type ISSData = {
   timestamp: number; // unix
 };
 
-// ─── Constantes ───────────────────────────────────────────────────────────────
-
 const ISS_API = "https://api.wheretheiss.at/v1/satellites/25544";
 const GLOBE_SIZE = 280;
 const GLOBE_R = GLOBE_SIZE / 2;
 
 const BRAZIL_LAT = -14.235;
 const BRAZIL_LNG = -51.925;
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function projectToGlobe(lat: number, lng: number, r: number) {
   const latR = (lat * Math.PI) / 180;
@@ -99,8 +88,6 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// ─── LiveBadge ────────────────────────────────────────────────────────────────
-
 const LiveBadge = React.memo(function LiveBadge() {
   const pulse = useSharedValue(1);
   useEffect(() => {
@@ -114,8 +101,6 @@ const LiveBadge = React.memo(function LiveBadge() {
     </View>
   );
 });
-
-// ─── InfoRow ──────────────────────────────────────────────────────────────────
 
 const InfoRow = React.memo(function InfoRow({
   icon,
@@ -140,20 +125,16 @@ const InfoRow = React.memo(function InfoRow({
   );
 });
 
-// ─── GlobeView ────────────────────────────────────────────────────────────────
-
 const GlobeView = React.memo(function GlobeView({ data }: { data: ISSData }) {
   const spin = useSharedValue(0);
 
-  // Bug fix original: [spin] nas deps recriava o withRepeat a cada render.
-  // SharedValue é estável — deps correta é [].
   useEffect(() => {
     spin.value = withRepeat(
       withTiming(1, { duration: 90_000, easing: Easing.linear }),
       -1,
       false,
     );
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const globeStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${spin.value * 360}deg` }],
@@ -191,7 +172,6 @@ const GlobeView = React.memo(function GlobeView({ data }: { data: ISSData }) {
         <View style={styles.globeOverlay} />
       </Animated.View>
 
-      {/* Linha ISS <-> Brasil */}
       {iss.visible && brazil.visible && (
         <View
           style={
@@ -211,7 +191,6 @@ const GlobeView = React.memo(function GlobeView({ data }: { data: ISSData }) {
         />
       )}
 
-      {/* Ponto Brasil */}
       {brazil.visible && (
         <>
           <View
@@ -231,7 +210,6 @@ const GlobeView = React.memo(function GlobeView({ data }: { data: ISSData }) {
         </>
       )}
 
-      {/* ISS */}
       <View
         style={[
           styles.issContainer,
@@ -259,8 +237,6 @@ const GlobeView = React.memo(function GlobeView({ data }: { data: ISSData }) {
     </View>
   );
 });
-
-// ─── BrazilStatus ─────────────────────────────────────────────────────────────
 
 const BrazilStatus = React.memo(function BrazilStatus({
   data,
@@ -299,8 +275,6 @@ const BrazilStatus = React.memo(function BrazilStatus({
     </View>
   );
 });
-
-// ─── Componente principal ─────────────────────────────────────────────────────
 
 export default function SatelliteScreen() {
   const [data, setData] = useState<ISSData | null>(null);
@@ -494,8 +468,6 @@ export default function SatelliteScreen() {
     </View>
   );
 }
-
-// ─── Estilos ──────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: OrbitColors.deepBlack },

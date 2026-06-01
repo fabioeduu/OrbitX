@@ -1,4 +1,3 @@
-// app/(tabs)/reports.tsx
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
@@ -39,8 +38,6 @@ import { OrbitButton } from '../../components/OrbitButton';
 import { PremiumCard } from '../../components/PremiumCard';
 import { OrbitColors } from '../../constants/Colors';
 
-// ─── Tipos ────────────────────────────────────────────────────────────────────
-
 type Period = '7d' | '30d' | '90d';
 
 type ESGMetric = {
@@ -52,8 +49,6 @@ type ESGMetric = {
   positive: boolean;
   icon: React.ReactNode;
 };
-
-// ─── Dados por período ────────────────────────────────────────────────────────
 
 const PERIOD_DATA: Record<Period, {
   label: string;
@@ -93,8 +88,6 @@ const PERIOD_DATA: Record<Period, {
   },
 };
 
-// ─── Sub-componente: Seletor de período ───────────────────────────────────────
-
 const PeriodSelector = React.memo(function PeriodSelector({
   selected,
   onChange,
@@ -133,8 +126,6 @@ const PeriodSelector = React.memo(function PeriodSelector({
   );
 });
 
-// ─── Sub-componente: Score card animado ───────────────────────────────────────
-
 const ScoreCard = React.memo(function ScoreCard({
   score,
   scoreTone,
@@ -152,7 +143,6 @@ const ScoreCard = React.memo(function ScoreCard({
 }) {
   const [showBefore, setShowBefore] = useState(false);
 
-  // Estatísticas do gráfico ativo
   const activeSeries = showBefore ? seriesBefore : series;
   const avg = Math.round(activeSeries.reduce((a, b) => a + b, 0) / activeSeries.length);
   const min = Math.min(...activeSeries);
@@ -160,7 +150,6 @@ const ScoreCard = React.memo(function ScoreCard({
 
   return (
     <PremiumCard>
-      {/* Score + métricas */}
       <View style={styles.scoreRow}>
         <View style={styles.scoreLeft}>
           <Text style={styles.scoreLabel}>Pontuação Sustentável</Text>
@@ -194,7 +183,6 @@ const ScoreCard = React.memo(function ScoreCard({
 
       <View style={styles.divider} />
 
-      {/* Toggle antes/depois */}
       <View style={styles.chartHeaderRow}>
         <View style={styles.chartLegend}>
           <View style={[styles.legendDot, { backgroundColor: showBefore ? OrbitColors.danger : OrbitColors.spaceBlue }]} />
@@ -215,7 +203,6 @@ const ScoreCard = React.memo(function ScoreCard({
 
       <EnergyChart points={activeSeries} />
 
-      {/* Min / Med / Max */}
       <View style={styles.chartStats}>
         <View style={styles.chartStat}>
           <Text style={styles.chartStatLabel}>Mín</Text>
@@ -233,8 +220,6 @@ const ScoreCard = React.memo(function ScoreCard({
     </PremiumCard>
   );
 });
-
-// ─── Sub-componente: Métricas ESG expandíveis ─────────────────────────────────
 
 const ESGBreakdown = React.memo(function ESGBreakdown({
   metrics,
@@ -292,15 +277,12 @@ const ESGBreakdown = React.memo(function ESGBreakdown({
   );
 });
 
-// ─── Componente principal ─────────────────────────────────────────────────────
-
 export default function ReportsScreen() {
   const [period, setPeriod] = useState<Period>('7d');
   const [exporting, setExporting] = useState(false);
 
   const data = PERIOD_DATA[period];
 
-  // Simula exportação com estado de loading real no botão
   const handleExport = useCallback(async () => {
     setExporting(true);
     await new Promise(r => setTimeout(r, 1800)); // simula geração do PDF
@@ -312,7 +294,6 @@ export default function ReportsScreen() {
     );
   }, [period, data.label]);
 
-  // Share nativo — usa a API Share do React Native
   const handleShare = useCallback(async () => {
     try {
       await Share.share({
@@ -320,11 +301,9 @@ export default function ReportsScreen() {
         message: `OrbitX ESG Report — ${data.label}\n\nSustainable Score: ${data.score}\nRedução de carbono: ${data.carbonReduction}\nEconomia energética: ${data.energySaving}\n\nGerado via OrbitX`,
       });
     } catch {
-      // usuário cancelou o share — não exibe erro
-    }
+      Alert.alert('Erro ao compartilhar', 'Não foi possível compartilhar o relatório. Tente novamente mais tarde.');}
   }, [data]);
 
-  // Métricas ESG baseadas no período selecionado
   const esgMetrics: ESGMetric[] = useMemo(() => [
     {
       id: 'carbon',
@@ -391,12 +370,10 @@ export default function ReportsScreen() {
           subtitle="Economia energética • ESG • comparativo antes/depois"
         />
 
-        {/* ── Seletor de período ── */}
         <Animated.View entering={FadeInDown.duration(380)} style={styles.section}>
           <PeriodSelector selected={period} onChange={setPeriod} />
         </Animated.View>
 
-        {/* ── Score card + gráfico ── */}
         <Animated.View entering={FadeInDown.duration(420).delay(60)} style={styles.section}>
           <ScoreCard
             score={data.score}
@@ -408,12 +385,10 @@ export default function ReportsScreen() {
           />
         </Animated.View>
 
-        {/* ── Métricas ESG expandíveis ── */}
         <Animated.View entering={FadeInDown.duration(420).delay(120)} style={styles.section}>
           <ESGBreakdown metrics={esgMetrics} />
         </Animated.View>
 
-        {/* ── AI Insight ── */}
         <Animated.View entering={FadeInDown.duration(420).delay(180)} style={styles.section}>
           <AIRecommendationCard
             title="ESG Insight"
@@ -422,7 +397,6 @@ export default function ReportsScreen() {
           />
         </Animated.View>
 
-        {/* ── Ações ── */}
         <Animated.View entering={FadeInDown.duration(420).delay(240)} style={styles.actionsRow}>
           <View style={styles.actionPrimary}>
             <OrbitButton
@@ -443,14 +417,11 @@ export default function ReportsScreen() {
   );
 }
 
-// ─── Estilos ──────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: OrbitColors.deepBlack },
   content: { paddingTop: 40, paddingHorizontal: 20, paddingBottom: 0 },
   section: { marginBottom: 14 },
 
-  // Período
   periodRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -483,7 +454,6 @@ const styles = StyleSheet.create({
     color: OrbitColors.softWhite,
   },
 
-  // Score card
   scoreRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -543,7 +513,6 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
 
-  // Chart
   chartHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -607,7 +576,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
 
-  // ESG Breakdown
   esgHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -679,7 +647,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 
-  // Ações
   actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',

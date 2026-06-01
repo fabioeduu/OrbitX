@@ -1,7 +1,6 @@
-// store/auth.ts
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 export type AuthSession = {
   uid: string;
@@ -39,23 +38,19 @@ export const useAuthStore = create<AuthState>()(
 
       setHydrateComplete: (v) => set({ hydrateComplete: v }),
 
-      completeOnboarding: () =>
-        set({ hasCompletedOnboarding: true }),
+      completeOnboarding: () => set({ hasCompletedOnboarding: true }),
 
       login: async ({ email }) => {
         set({ isLoadingAuth: true });
 
         try {
-          // MOCK LOGIN
-          await new Promise((resolve) =>
-            setTimeout(resolve, 1000)
-          );
+          await new Promise((resolve) => setTimeout(resolve, 1000));
 
           set({
             session: {
-              uid: '1',
+              uid: "1",
               email,
-              companyName: 'OrbitX',
+              companyName: "OrbitX",
             },
           });
         } finally {
@@ -67,14 +62,11 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoadingAuth: true });
 
         try {
-          // MOCK REGISTER
-          await new Promise((resolve) =>
-            setTimeout(resolve, 1000)
-          );
+          await new Promise((resolve) => setTimeout(resolve, 1000));
 
           set({
             session: {
-              uid: '1',
+              uid: "1",
               email,
               companyName,
             },
@@ -89,7 +81,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       updatePassword: async () => {
-        console.log('Senha atualizada');
+        console.log("Senha atualizada");
       },
 
       updateEmail: async (newEmail) => {
@@ -106,13 +98,12 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'orbitx-auth',
+      name: "orbitx-auth",
       storage: createJSONStorage(() => AsyncStorage),
 
       partialize: (s) => ({
         session: s.session,
-        hasCompletedOnboarding:
-          s.hasCompletedOnboarding,
+        hasCompletedOnboarding: s.hasCompletedOnboarding,
       }),
 
       onRehydrateStorage: () => (state, error) => {
@@ -120,14 +111,10 @@ export const useAuthStore = create<AuthState>()(
           hydrateComplete: true,
         });
 
-        if (error)
-          console.warn(
-            '[OrbitX] Hydration error:',
-            error
-          );
+        if (error) console.warn("[OrbitX] Hydration error:", error);
       },
-    }
-  )
+    },
+  ),
 );
 
 export function useIsLoggedIn() {

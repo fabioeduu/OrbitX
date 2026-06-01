@@ -36,16 +36,13 @@ import {
   Snowflake,
   Sun,
   Waves,
-  Wind
+  Wind,
 } from "lucide-react-native";
 import { AnimatedHeader } from "../../components/AnimatedHeader";
 import { OrbitColors } from "../../constants/Colors";
 
-
-
 const NASA_KEY = process.env.EXPO_PUBLIC_NASA_API_KEY ?? "DEMO_KEY";
 const EONET_URL = `https://eonet.gsfc.nasa.gov/api/v3/events?status=open&days=30&limit=80`;
-
 
 const CATEGORY_SVG: Record<string, string> = {
   wildfires: `<path d="M12 2c0 6-6 8-6 13a6 6 0 0 0 12 0c0-5-6-7-6-13z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>`,
@@ -60,7 +57,6 @@ const CATEGORY_SVG: Record<string, string> = {
   manmade: `<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2" fill="none"/><line x1="12" y1="9" x2="12" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`,
   waterColor: `<path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10c0-3-1.5-5.5-3-7.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>`,
 };
-
 
 const CATEGORY_LUCIDE: Record<string, (color: string) => React.ReactNode> = {
   wildfires: (c) => <Flame size={15} color={c} />,
@@ -93,8 +89,6 @@ const CATEGORY_CONFIG: Record<
   waterColor: { color: "#48CAE4", label: "Água", risk: "BAIXO" },
 };
 
-
-
 type EONETGeometry = {
   date: string;
   type: "Point" | "Polygon";
@@ -116,13 +110,6 @@ type FilterState = {
   floods: boolean;
   earthquakes: boolean;
 };
-
-// ─── HTML do Leaflet (injetado no WebView) ────────────────────────────────────
-
-// ─── HTML estático do Leaflet (sem template literal aninhado) ────────────────
-// O JS dinâmico (eventos, categorias, ícones SVG) é injetado via um bloco
-// <script id="orbit-data"> separado, evitando o problema de escaping de
-// backticks aninhados que causa erros visuais no VSCode/editor.
 
 const LEAFLET_SHELL = [
   "<!DOCTYPE html>",
@@ -174,7 +161,6 @@ const LEAFLET_SHELL = [
   "</head>",
   "<body>",
   '<div id="map"></div>',
-  // Script principal — usa DATA injetado abaixo via ORBIT_DATA
   "<script>",
   'document.addEventListener("DOMContentLoaded", function() {',
   "  var EVENTS     = window.ORBIT_DATA.events;",
@@ -260,10 +246,6 @@ function buildLeafletHTML(
   events: EONETEvent[],
   svgMap: Record<string, string>,
 ): string {
-  // Injeta os dados como variável global ANTES do script principal carregar
-  // Isso elimina completamente o problema de template literals aninhados:
-  // os dados são serializados em JSON e atribuídos a window.ORBIT_DATA,
-  // e o script estático (LEAFLET_SHELL) os lê via window.ORBIT_DATA.
   const dataScript = [
     "<script>",
     "window.ORBIT_DATA = {",
@@ -277,11 +259,8 @@ function buildLeafletHTML(
     "<\/script>",
   ].join("\n");
 
-  // Injeta o bloco de dados logo antes do </body>
   return LEAFLET_SHELL.replace("</body>", dataScript + "\n</body>");
 }
-
-// ─── Componente de filtro ─────────────────────────────────────────────────────
 
 const FilterChip = React.memo(function FilterChip({
   catId,
@@ -318,8 +297,6 @@ const FilterChip = React.memo(function FilterChip({
   );
 });
 
-// ─── Componente principal ─────────────────────────────────────────────────────
-
 export default function MapScreen() {
   const webRef = useRef<WebView>(null);
   const [events, setEvents] = useState<EONETEvent[]>([]);
@@ -331,7 +308,6 @@ export default function MapScreen() {
   );
   const [lastUpdated, setLastUpdated] = useState("");
 
-  // Animação de pulso no indicador "ao vivo"
   const livePulse = useSharedValue(1);
   useEffect(() => {
     livePulse.value = withRepeat(withTiming(0.3, { duration: 900 }), -1, true);
@@ -366,13 +342,11 @@ export default function MapScreen() {
     };
   }, []);
 
-  // HTML do mapa (recalcula quando eventos mudam)
   const mapHTML = useMemo(
     () => buildLeafletHTML(events, CATEGORY_SVG),
     [events],
   );
 
-  // Recebe mensagens do WebView (contagem de markers)
   const onWebViewMessage = useCallback((e: any) => {
     try {
       const msg = JSON.parse(e.nativeEvent.data);
@@ -380,7 +354,6 @@ export default function MapScreen() {
     } catch {}
   }, []);
 
-  // Toggle de filtro
   const toggleFilter = useCallback((catId: string) => {
     setActiveFilters((prev) => {
       const next = { ...prev, [catId]: !prev[catId] };
@@ -391,7 +364,6 @@ export default function MapScreen() {
     });
   }, []);
 
-  // Stats calculadas
   const totalActive = useMemo(
     () =>
       Object.entries(counts)
@@ -410,7 +382,6 @@ export default function MapScreen() {
 
   return (
     <View style={styles.root}>
-      {/* Gradiente de fundo */}
       <LinearGradient
         colors={[
           OrbitColors.deepBlack,
@@ -427,7 +398,6 @@ export default function MapScreen() {
         subtitle="Eventos naturais NASA EONET • infraestrutura em risco"
       />
 
-      {/* ── Barra de status ── */}
       <Animated.View
         entering={FadeInDown.duration(350)}
         style={styles.statusBar}
@@ -463,7 +433,6 @@ export default function MapScreen() {
         </View>
       </Animated.View>
 
-      {/* ── Mapa ── */}
       <View style={styles.mapContainer}>
         {loading && (
           <View style={styles.overlay}>
@@ -496,19 +465,15 @@ export default function MapScreen() {
               onMessage={onWebViewMessage}
               javaScriptEnabled
               domStorageEnabled
-              // Necessário para carregar tiles externos
               mixedContentMode="always"
               originWhitelist={["*"]}
-              // Sem barra de loading nativa
               startInLoadingState={false}
-              // Scroll do mapa não conflita com scroll da tela
               scrollEnabled={false}
             />
           </Animated.View>
         )}
       </View>
 
-      {/* ── Filtros por categoria ── */}
       {!loading && !error && (
         <Animated.View
           entering={FadeInRight.duration(400).delay(200)}
@@ -532,13 +497,10 @@ export default function MapScreen() {
         </Animated.View>
       )}
 
-      {/* Espaço para tab bar */}
       <View style={{ height: 128 }} />
     </View>
   );
 }
-
-// ─── Estilos ──────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: OrbitColors.deepBlack },
@@ -588,7 +550,6 @@ const styles = StyleSheet.create({
   statNum: { color: "#F1F5F9", fontFamily: "Inter_700Bold", fontSize: 14 },
   statLabel: { color: "#64748B", fontFamily: "Inter_400Regular", fontSize: 10 },
 
-  // Mapa
   mapContainer: {
     flex: 1,
     marginHorizontal: 12,
@@ -599,7 +560,6 @@ const styles = StyleSheet.create({
   },
   webview: { flex: 1, backgroundColor: "#060D1F" },
 
-  // Overlay loading/erro
   overlay: {
     ...StyleSheet.absoluteFillObject,
     alignItems: "center",
@@ -631,7 +591,6 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.10)",
   },
 
-  // Filtros
   filtersWrap: { paddingTop: 10 },
   filtersScroll: { paddingHorizontal: 12, gap: 8 },
   chip: {

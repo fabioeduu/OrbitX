@@ -1,20 +1,17 @@
-// app/_layout.tsx
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Stack } from 'expo-router';
-import React, { useEffect } from 'react';
-import { View } from 'react-native';
+import { Stack } from "expo-router";
+import React, { useEffect } from "react";
+import { View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import '../polyfill'; // ← importar polyfill aqui
-import { useOrbitFonts } from '../hooks/useOrbitFonts';
-import { useAuthStore } from '../store/auth';
-import { OrbitColors } from '../constants/Colors';
+import { OrbitColors } from "../constants/Colors";
+import { useOrbitFonts } from "../hooks/useOrbitFonts";
+import { useAuthStore } from "../store/auth";
 
 export default function RootLayout() {
   const [fontsLoaded] = useOrbitFonts();
   const hydrateComplete = useAuthStore((s) => s.hydrateComplete);
 
-  // Fallback de segurança caso AsyncStorage falhe
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (!useAuthStore.getState().hydrateComplete) {
@@ -31,13 +28,13 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+        <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
           <Stack.Screen name="splash" />
           <Stack.Screen name="onboarding" />
           <Stack.Screen name="login" />
           <Stack.Screen name="register" />
           <Stack.Screen name="forgot-password" />
-          <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
+          <Stack.Screen name="(tabs)" options={{ animation: "none" }} />
           <Stack.Screen name="settings" />
         </Stack>
       </SafeAreaProvider>

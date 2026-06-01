@@ -318,7 +318,6 @@ export default function SettingsScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Header ── */}
         <Animated.View
           entering={FadeInDown.duration(300)}
           style={styles.header}
@@ -346,7 +345,6 @@ export default function SettingsScreen() {
           </View>
         </Animated.View>
 
-        {/* ── CONTA ── */}
         <Animated.View entering={FadeInDown.duration(350).delay(40)}>
           <SectionLabel label="CONTA" />
           <PremiumCard>
@@ -371,7 +369,6 @@ export default function SettingsScreen() {
           </PremiumCard>
         </Animated.View>
 
-        {/* ── SEGURANÇA ── */}
         <Animated.View entering={FadeInDown.duration(350).delay(80)}>
           <SectionLabel label="SEGURANÇA" />
           <PremiumCard>
@@ -410,7 +407,6 @@ export default function SettingsScreen() {
           </PremiumCard>
         </Animated.View>
 
-        {/* ── ALERTAS ── */}
         <Animated.View entering={FadeInDown.duration(350).delay(120)}>
           <SectionLabel label="ALERTAS" />
           <PremiumCard>
@@ -456,7 +452,6 @@ export default function SettingsScreen() {
           </PremiumCard>
         </Animated.View>
 
-        {/* ── APARÊNCIA ── */}
         <Animated.View entering={FadeInDown.duration(350).delay(160)}>
           <SectionLabel label="APARÊNCIA" />
           <PremiumCard>
@@ -487,7 +482,6 @@ export default function SettingsScreen() {
           </PremiumCard>
         </Animated.View>
 
-        {/* ── SOBRE O PROJETO ── */}
         <Animated.View entering={FadeInDown.duration(350).delay(200)}>
           <SectionLabel label="SOBRE O PROJETO" />
           <PremiumCard>
@@ -568,7 +562,7 @@ export default function SettingsScreen() {
                 </View>
                 <Pressable
                   onPress={() =>
-                    Linking.openURL("https://github.com/fabioeduu/orbitx")
+                    Linking.openURL("https://github.com/fabioeduu/OrbitX_GS")
                   }
                   style={[
                     styles.repoBtn,
@@ -591,7 +585,6 @@ export default function SettingsScreen() {
           </PremiumCard>
         </Animated.View>
 
-        {/* ── INTEGRANTES ── */}
         <Animated.View entering={FadeInDown.duration(350).delay(240)}>
           <SectionLabel label="INTEGRANTES" />
           {TEAM.map((member, i) => (
@@ -607,7 +600,6 @@ export default function SettingsScreen() {
           ))}
         </Animated.View>
 
-        {/* ── LOGOUT ── */}
         <Animated.View
           entering={FadeInDown.duration(350).delay(300)}
           style={styles.logoutSection}
@@ -627,7 +619,6 @@ export default function SettingsScreen() {
         </Text>
       </ScrollView>
 
-      {/* ── Modal: Alterar senha ── */}
       <Modal
         visible={showPasswordModal}
         transparent
@@ -707,7 +698,6 @@ export default function SettingsScreen() {
         </Pressable>
       </Modal>
 
-      {/* ── Modal: Alterar e-mail ── */}
       <Modal
         visible={showEmailModal}
         transparent
@@ -790,8 +780,6 @@ export default function SettingsScreen() {
     </View>
   );
 }
-
-// ─── Estilos estáticos ────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
