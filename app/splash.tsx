@@ -1,0 +1,293 @@
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import React, { useEffect, useMemo } from "react";
+import { Dimensions, StyleSheet, Text, View } from "react-native";
+import Animated, {
+    Easing,
+    interpolate,
+    useAnimatedStyle,
+    useSharedValue,
+    withDelay,
+    withRepeat,
+    withTiming,
+} from "react-native-reanimated";
+
+import { OrbitColors } from "../constants/Colors";
+import { useAuthStore } from "../store/auth";
+import { sleep } from "../utils/sleep";
+
+const { width, height } = Dimensions.get("window");
+
+type Particle = {
+  id: string;
+  x: number;
+  y: number;
+  size: number;
+  delay: number;
+};
+
+export default function SplashScreen() {
+  const router = useRouter();
+  const hasCompletedOnboarding = useAuthStore((s) => s.hasCompletedOnboarding);
+  const isLoggedIn = useAuthStore((s) => Boolean(s.session));
+
+  const orbit = useSharedValue(0);
+  const pulse = useSharedValue(0);
+
+  const particles = useMemo<Particle[]>(() => {
+    const list: Particle[] = [];
+    for (let i = 0; i < 26; i++) {
+      const rx = (i * 97) % 1000;
+      const ry = (i * 193) % 1000;
+      list.push({
+        id: `p-${i}`,
+        x: (rx / 1000) * width,
+        y: (ry / 1000) * height,
+        size: 1 + (i % 3),
+        delay: (i % 7) * 120,
+      });
+    }
+    return list;
+  }, []);
+
+  useEffect(() => {
+    orbit.value = withRepeat(
+      withTiming(1, { duration: 2800, easing: Easing.linear }),
+      -1,
+      false,
+    );
+    pulse.value = withRepeat(
+      withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.quad) }),
+      -1,
+      true,
+    );
+  }, [orbit, pulse]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      await sleep(2200);
+      if (!mounted) return;
+
+      if (!hasCompletedOnboarding) {
+        router.replace("/onboarding");
+        return;
+      }
+
+      if (isLoggedIn) {
+        router.replace("/(tabs)/dashboard");
+      } else {
+        router.replace("/login");
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [hasCompletedOnboarding, isLoggedIn, router]);
+
+  const ringA = useAnimatedStyle(() => {
+    const rotate = `${orbit.value * 360}deg`;
+    return { transform: [{ rotate }] };
+  });
+
+  const ringB = useAnimatedStyle(() => {
+    const rotate = `${-orbit.value * 360}deg`;
+    return { transform: [{ rotate }] };
+  });
+
+  const logoGlow = useAnimatedStyle(() => {
+    const opacity = interpolate(pulse.value, [0, 1], [0.45, 0.9]);
+    return { opacity };
+  });
+
+  return (
+    <View style={styles.root}>
+      <LinearGradient
+        colors={[
+          OrbitColors.deepBlack,
+          "rgba(59,130,246,0.10)",
+          OrbitColors.deepBlack,
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+
+      {particles.map((p) => (
+        <ParticleDot key={p.id} x={p.x} y={p.y} size={p.size} delay={p.delay} />
+      ))}
+
+      <View style={styles.center}>
+        <Animated.View style={[styles.glow, logoGlow]} />
+
+        <View style={styles.logoCore}>
+          <Text style={styles.logoText}>ORBIT</Text>
+          <Text style={styles.logoX}>X</Text>
+        </View>
+
+        <Animated.View style={[styles.ring, styles.ringA, ringA]} />
+        <Animated.View style={[styles.ring, styles.ringB, ringB]} />
+
+        <Text style={styles.tagline}>
+          Inteligência orbital para datacenters sustentáveis
+        </Text>
+
+        <View style={styles.loadingRow}>
+          <Animated.View
+            style={[
+              styles.loadingDot,
+              { backgroundColor: OrbitColors.spaceBlue },
+              logoGlow,
+            ]}
+          />
+          <Animated.View
+            style={[
+              styles.loadingDot,
+              { backgroundColor: OrbitColors.neonGreen },
+              logoGlow,
+            ]}
+          />
+          <Animated.View
+            style={[
+              styles.loadingDot,
+              { backgroundColor: OrbitColors.softWhite },
+              logoGlow,
+            ]}
+          />
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function ParticleDot({
+  x,
+  y,
+  size,
+  delay,
+}: {
+  x: number;
+  y: number;
+  size: number;
+  delay: number;
+}) {
+  const t = useSharedValue(0);
+
+  useEffect(() => {
+    t.value = withRepeat(
+      withDelay(
+        delay,
+        withTiming(1, { duration: 2200, easing: Easing.inOut(Easing.quad) }),
+      ),
+      -1,
+      true,
+    );
+  }, [delay, t]);
+
+  const anim = useAnimatedStyle(() => {
+    const opacity = interpolate(t.value, [0, 1], [0.1, 0.55]);
+    const scale = interpolate(t.value, [0, 1], [0.9, 1.2]);
+    return {
+      opacity,
+      transform: [{ scale }],
+    };
+  });
+
+  return (
+    <Animated.View
+      style={[
+        styles.particle,
+        anim,
+        {
+          left: x,
+          top: y,
+          width: size,
+          height: size,
+          borderRadius: 999,
+          backgroundColor: "rgba(234,242,255,0.85)",
+        },
+      ]}
+    />
+  );
+}
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: OrbitColors.deepBlack,
+  },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 22,
+  },
+  particle: {
+    position: "absolute",
+  },
+  glow: {
+    position: "absolute",
+    width: 240,
+    height: 240,
+    borderRadius: 999,
+    backgroundColor: OrbitColors.spaceBlue,
+    opacity: 0.6,
+    shadowColor: OrbitColors.neonGreen,
+    shadowOpacity: 0.35,
+    shadowRadius: 36,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  logoCore: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 6,
+  },
+  logoText: {
+    color: OrbitColors.softWhite,
+    fontFamily: "Inter_700Bold",
+    letterSpacing: 4,
+    fontSize: 30,
+  },
+  logoX: {
+    color: OrbitColors.neonGreen,
+    fontFamily: "Inter_700Bold",
+    letterSpacing: 2,
+    fontSize: 34,
+    marginBottom: -2,
+  },
+  ring: {
+    position: "absolute",
+    width: 220,
+    height: 220,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(59,130,246,0.45)",
+  },
+  ringA: {
+    borderColor: "rgba(59,130,246,0.45)",
+  },
+  ringB: {
+    width: 260,
+    height: 260,
+    borderColor: "rgba(34,197,94,0.35)",
+  },
+  tagline: {
+    marginTop: 28,
+    color: OrbitColors.premiumGray,
+    fontFamily: "Inter_400Regular",
+    textAlign: "center",
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  loadingRow: {
+    marginTop: 18,
+    flexDirection: "row",
+    gap: 10,
+  },
+  loadingDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 999,
+  },
+});

@@ -1,0 +1,63 @@
+import { Sparkles } from "lucide-react-native";
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
+
+import { OrbitColors } from "../constants/Colors";
+import { PremiumCard } from "./PremiumCard";
+
+type Props = {
+  title: string;
+  body: string;
+  impactLabel?: string;
+};
+
+export function AIRecommendationCard({ title, body, impactLabel }: Props) {
+  return (
+    <PremiumCard>
+      <View style={styles.header}>
+        <View style={styles.iconWrap}>
+          <Sparkles size={16} color={OrbitColors.neonGreen} />
+        </View>
+        <Text style={styles.title}>{title}</Text>
+        {impactLabel ? <Text style={styles.impact}>{impactLabel}</Text> : null}
+      </View>
+      <Text style={styles.body}>{body}</Text>
+    </PremiumCard>
+  );
+}
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  iconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(34,197,94,0.12)",
+    borderColor: "rgba(34,197,94,0.28)",
+    borderWidth: StyleSheet.hairlineWidth,
+    marginRight: 10,
+  },
+  title: {
+    flex: 1,
+    color: OrbitColors.softWhite,
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 14,
+  },
+  impact: {
+    color: OrbitColors.spaceBlue,
+    fontFamily: "Inter_700Bold",
+    fontSize: 12,
+  },
+  body: {
+    color: OrbitColors.premiumGray,
+    fontFamily: "Inter_400Regular",
+    fontSize: 13,
+    lineHeight: 18,
+  },
+});
