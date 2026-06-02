@@ -314,7 +314,6 @@ export default function MapScreen() {
   }, []);
   const liveStyle = useAnimatedStyle(() => ({ opacity: livePulse.value }));
 
-  // Busca dados da NASA EONET
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -505,7 +504,6 @@ export default function MapScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: OrbitColors.deepBlack },
 
-  // Status bar
   statusBar: {
     flexDirection: "row",
     alignItems: "center",

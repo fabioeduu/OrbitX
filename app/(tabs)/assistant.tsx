@@ -16,8 +16,9 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { AnimatedHeader } from "../../components/AnimatedHeader";
 import { GlassContainer } from "../../components/GlassContainer";
 import { useColors } from "../../constants/Colors";
+import { assistantApi } from "../../services/orbitApi";
 import { useThemeStore } from "../../store/theme";
-import { sleep } from "../../utils/sleep";
+import type { ChatMessage } from "../../types/api";
 
 type Role = "user" | "assistant";
 
@@ -32,41 +33,6 @@ const SUGGESTIONS = [
   "Como reduzir 10% do consumo?",
   "Risco térmico nas próximas 3h",
 ];
-
-function makeReply(prompt: string) {
-  const p = prompt.toLowerCase();
-
-  if (p.includes("kpi") || p.includes("resumo")) {
-    return (
-      "Resumo: consumo 742 kW (-3.1%), temperatura 36.8°C (estável), " +
-      "carbono 1.42 tCO₂e (-1.8%), eficiência 92% (+0.7%). " +
-      "Recomendo ajustar setpoints em +0.6°C nas zonas frias para reduzir " +
-      "consumo sem risco térmico."
-    );
-  }
-
-  if (p.includes("reduzir") || p.includes("10%")) {
-    return (
-      "Para reduzir ~10%: (1) otimizar setpoints +0.5°C em zonas estáveis, " +
-      "(2) aplicar fan curves com controle preditivo, " +
-      "(3) migrar workloads batch para janelas com menor fator de emissão, " +
-      "(4) habilitar pre-cooling antes de picos térmicos."
-    );
-  }
-
-  if (p.includes("risco") || p.includes("3h")) {
-    return (
-      "Risco térmico nas próximas 3h: baixo. Pequena elevação prevista em " +
-      "EU (Frankfurt) por umidade/temperatura externa. Mitigação: ativar " +
-      "pre-cooling leve e redistribuir cargas de alta densidade."
-    );
-  }
-
-  return (
-    "Entendi. Quer que eu analise por região (Mapa), por satélite/clima " +
-    "(Orbital) ou por economia/ESG (Métricas)?"
-  );
-}
 
 function Bubble({ role, text }: { role: Role; text: string }) {
   const colors = useColors();
@@ -137,43 +103,48 @@ export default function AssistantScreen() {
     [input, typing],
   );
 
-  const send = useCallback(async (text: string) => {
-    const value = text.trim();
+  const send = useCallback(
+    async (text: string) => {
+      const value = text.trim();
+      if (!value) return;
 
-    if (!value) return;
+      setMessages((prev) => [
+        { id: `u-${Date.now()}`, role: "user", text: value },
+        ...prev,
+      ]);
+      setInput("");
+      setTyping(true);
 
-    setMessages((prev) => [
-      {
-        id: `u-${Date.now()}`,
-        role: "user",
-        text: value,
-      },
-      ...prev,
-    ]);
+      try {
+        const history: ChatMessage[] = messages
+          .slice()
+          .reverse()
+          .map((m) => ({ role: m.role, content: m.text }));
 
-    setInput("");
-    setTyping(true);
+        const { data } = await assistantApi.chat({ message: value, history });
 
-    await sleep(650);
-
-    setMessages((prev) => [
-      {
-        id: `a-${Date.now()}`,
-        role: "assistant",
-        text: makeReply(value),
-      },
-      ...prev,
-    ]);
-
-    setTyping(false);
-
-    requestAnimationFrame(() => {
-      listRef.current?.scrollToOffset({
-        offset: 0,
-        animated: true,
-      });
-    });
-  }, []);
+        setMessages((prev) => [
+          { id: `a-${Date.now()}`, role: "assistant", text: data.response },
+          ...prev,
+        ]);
+      } catch {
+        setMessages((prev) => [
+          {
+            id: `a-${Date.now()}`,
+            role: "assistant",
+            text: "Não consegui conectar ao assistente. Verifique sua conexão e tente novamente.",
+          },
+          ...prev,
+        ]);
+      } finally {
+        setTyping(false);
+        requestAnimationFrame(() =>
+          listRef.current?.scrollToOffset({ offset: 0, animated: true }),
+        );
+      }
+    },
+    [messages],
+  );
 
   const gradientColors: [string, string, string, string] =
     mode === "dark"

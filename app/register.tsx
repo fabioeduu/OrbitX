@@ -1,53 +1,61 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, useRouter } from "expo-router";
-import { Building2, Eye, EyeOff, ShieldCheck } from "lucide-react-native";
+import {
+  Building2,
+  Eye,
+  EyeOff,
+  Hash,
+  ShieldCheck,
+  User,
+} from "lucide-react-native";
 import React, { useMemo, useState } from "react";
 import {
-    Alert,
-    Pressable,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
-
 import { OrbitButton } from "../components/OrbitButton";
 import { PremiumCard } from "../components/PremiumCard";
 import { OrbitColors } from "../constants/Colors";
 import { useAuthStore } from "../store/auth";
-
 export default function RegisterScreen() {
   const router = useRouter();
   const register = useAuthStore((s) => s.register);
   const isLoadingAuth = useAuthStore((s) => s.isLoadingAuth);
-
   const [companyName, setCompanyName] = useState("");
+  const [taxId, setTaxId] = useState("");
+  const [adminName, setAdminName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
-
   const canSubmit = useMemo(
     () =>
       companyName.trim().length >= 2 &&
+      taxId.trim().length >= 2 &&
+      adminName.trim().length >= 2 &&
       email.trim().length > 3 &&
-      password.length >= 6,
-    [companyName, email, password],
+      password.length >= 8,
+    [companyName, taxId, adminName, email, password],
   );
-
   const onSubmit = async () => {
     if (!canSubmit) return;
     try {
       await register({
         companyName: companyName.trim(),
+        taxId: taxId.trim(),
+        adminName: adminName.trim(),
         email: email.trim(),
         password,
       });
       router.replace("/(tabs)/dashboard");
-    } catch {
-      Alert.alert("Orbit X", "Falha ao criar conta.");
+    } catch (e: any) {
+      Alert.alert("Orbit X", e?.message ?? "Falha ao criar conta.");
     }
   };
-
   return (
     <View style={styles.root}>
       <LinearGradient
@@ -61,7 +69,6 @@ export default function RegisterScreen() {
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-
       <View style={styles.header}>
         <View style={styles.badge}>
           <ShieldCheck size={16} color={OrbitColors.spaceBlue} />
@@ -72,8 +79,10 @@ export default function RegisterScreen() {
           Crie sua conta empresarial e conecte seus datacenters.
         </Text>
       </View>
-
-      <View style={styles.body}>
+      <ScrollView
+        contentContainerStyle={styles.body}
+        showsVerticalScrollIndicator={false}
+      >
         <PremiumCard>
           <Text style={styles.label}>Empresa</Text>
           <View style={styles.field}>
@@ -86,7 +95,31 @@ export default function RegisterScreen() {
               style={styles.input}
             />
           </View>
-
+          <Text style={[styles.label, { marginTop: 14 }]}>CNPJ</Text>
+          <View style={styles.field}>
+            <Hash size={16} color={OrbitColors.premiumGray} />
+            <TextInput
+              value={taxId}
+              onChangeText={setTaxId}
+              placeholder="00.000.000/0001-00"
+              placeholderTextColor="rgba(154,164,178,0.6)"
+              keyboardType="numeric"
+              style={styles.input}
+            />
+          </View>
+          <Text style={[styles.label, { marginTop: 14 }]}>
+            Nome do Administrador
+          </Text>
+          <View style={styles.field}>
+            <User size={16} color={OrbitColors.premiumGray} />
+            <TextInput
+              value={adminName}
+              onChangeText={setAdminName}
+              placeholder="João Silva"
+              placeholderTextColor="rgba(154,164,178,0.6)"
+              style={styles.input}
+            />
+          </View>
           <Text style={[styles.label, { marginTop: 14 }]}>Email</Text>
           <View style={styles.field}>
             <TextInput
@@ -99,13 +132,12 @@ export default function RegisterScreen() {
               style={styles.input}
             />
           </View>
-
           <Text style={[styles.label, { marginTop: 14 }]}>Senha</Text>
           <View style={styles.field}>
             <TextInput
               value={password}
               onChangeText={setPassword}
-              placeholder="mínimo 6 caracteres"
+              placeholder="mínimo 8 caracteres"
               placeholderTextColor="rgba(154,164,178,0.6)"
               secureTextEntry={!show}
               autoCapitalize="none"
@@ -119,7 +151,6 @@ export default function RegisterScreen() {
               )}
             </Pressable>
           </View>
-
           <View style={{ marginTop: 16 }} />
           <OrbitButton
             label="Criar Conta"
@@ -127,7 +158,6 @@ export default function RegisterScreen() {
             disabled={!canSubmit}
             loading={isLoadingAuth}
           />
-
           <View style={styles.footerRow}>
             <Text style={styles.footerText}>Já tem conta?</Text>
             <Link href="/login" asChild>
@@ -137,11 +167,10 @@ export default function RegisterScreen() {
             </Link>
           </View>
         </PremiumCard>
-      </View>
+      </ScrollView>
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: OrbitColors.deepBlack },
   header: { paddingTop: 70, paddingHorizontal: 22, paddingBottom: 18 },
@@ -175,7 +204,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
-  body: { paddingHorizontal: 22 },
+  body: { paddingHorizontal: 22, paddingBottom: 40 },
   label: {
     color: OrbitColors.premiumGray,
     fontFamily: "Inter_500Medium",

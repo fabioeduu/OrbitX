@@ -1,43 +1,1 @@
-import { LinearGradient } from "expo-linear-gradient";
-import React from "react";
-import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
-
-import { OrbitColors } from "../constants/Colors";
-import { GlassContainer } from "./GlassContainer";
-
-type Props = {
-  children: React.ReactNode;
-  style?: StyleProp<ViewStyle>;
-};
-
-export function PremiumCard({ children, style }: Props) {
-  return (
-    <LinearGradient
-      colors={[
-        OrbitColors.glowBlue,
-        "rgba(255,255,255,0.06)",
-        OrbitColors.glowGreen,
-      ]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={[styles.border, style]}
-    >
-      <GlassContainer style={styles.inner} intensity={18}>
-        <View style={styles.content}>{children}</View>
-      </GlassContainer>
-    </LinearGradient>
-  );
-}
-
-const styles = StyleSheet.create({
-  border: {
-    padding: 1,
-    borderRadius: 22,
-  },
-  inner: {
-    borderRadius: 21,
-  },
-  content: {
-    padding: 16,
-  },
-});
+import { LinearGradient } from "expo-linear-gradient";import React from "react";import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";import { OrbitColors } from "../constants/Colors";import { GlassContainer } from "./GlassContainer";type Props = {  children: React.ReactNode;  style?: StyleProp<ViewStyle>;};export function PremiumCard({ children, style }: Props) {  return (    <LinearGradient      colors={[        OrbitColors.glowBlue,        "rgba(255,255,255,0.06)",        OrbitColors.glowGreen,      ]}      start={{ x: 0, y: 0 }}      end={{ x: 1, y: 1 }}      style={[styles.border, style]}    >      <GlassContainer style={styles.inner} intensity={18}>        <View style={styles.content}>{children}</View>      </GlassContainer>    </LinearGradient>  );}const styles = StyleSheet.create({  border: {    padding: 1,    borderRadius: 22,  },  inner: {    borderRadius: 21,  },  content: {    padding: 16,  },});

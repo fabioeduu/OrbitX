@@ -1,122 +1,111 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import { setAuthToken } from '../services/api';
+import { authApi } from '../services/orbitApi';
+import type { UserRole } from '../types/api';
 export type AuthSession = {
-  uid: string;
-  email: string;
+  token:       string;
+  uid:         string;
+  email:       string;
+  name:        string;
   companyName: string;
+  role:        UserRole;
 };
-
 type AuthState = {
-  session: AuthSession | null;
+  session:               AuthSession | null;
   hasCompletedOnboarding: boolean;
-  isLoadingAuth: boolean;
-  hydrateComplete: boolean;
-
+  isLoadingAuth:         boolean;
+  hydrateComplete:       boolean;
   completeOnboarding: () => void;
+  setHydrateComplete: (v: boolean) => void;
   login: (p: { email: string; password: string }) => Promise<void>;
   register: (p: {
     companyName: string;
-    email: string;
-    password: string;
+    taxId:       string;
+    adminName:   string;
+    email:       string;
+    password:    string;
   }) => Promise<void>;
-
   logout: () => Promise<void>;
-  updatePassword: (newPassword: string) => Promise<void>;
-  updateEmail: (newEmail: string) => Promise<void>;
-  setHydrateComplete: (v: boolean) => void;
 };
-
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
-      session: null,
+    (set) => ({
+      session:               null,
       hasCompletedOnboarding: false,
-      isLoadingAuth: false,
-      hydrateComplete: false,
-
+      isLoadingAuth:         false,
+      hydrateComplete:       false,
       setHydrateComplete: (v) => set({ hydrateComplete: v }),
-
       completeOnboarding: () => set({ hasCompletedOnboarding: true }),
-
-      login: async ({ email }) => {
+      login: async ({ email, password }) => {
         set({ isLoadingAuth: true });
-
         try {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-
+          const { data } = await authApi.login({ email, password });
+          const { accessToken, user } = data.data;
+          setAuthToken(accessToken);
           set({
             session: {
-              uid: "1",
-              email,
-              companyName: "OrbitX",
+              token:       accessToken,
+              uid:         String(user.id),
+              email:       user.email,
+              name:        user.name,
+              companyName: user.companyName,
+              role:        user.role,
             },
           });
         } finally {
           set({ isLoadingAuth: false });
         }
       },
-
-      register: async ({ companyName, email }) => {
+      register: async ({ companyName, taxId, adminName, email, password }) => {
         set({ isLoadingAuth: true });
-
         try {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-
+          const { data } = await authApi.register({
+            companyName,
+            taxId,
+            adminName,
+            email,
+            password,
+          });
+          const { accessToken, user } = data.data;
+          setAuthToken(accessToken);
           set({
             session: {
-              uid: "1",
-              email,
-              companyName,
+              token:       accessToken,
+              uid:         String(user.id),
+              email:       user.email,
+              name:        user.name,
+              companyName: user.companyName,
+              role:        user.role,
             },
           });
         } finally {
           set({ isLoadingAuth: false });
         }
       },
-
       logout: async () => {
+        setAuthToken(null);
         set({ session: null });
-      },
-
-      updatePassword: async () => {
-        console.log("Senha atualizada");
-      },
-
-      updateEmail: async (newEmail) => {
-        const session = get().session;
-
-        if (!session) return;
-
-        set({
-          session: {
-            ...session,
-            email: newEmail,
-          },
-        });
       },
     }),
     {
-      name: "orbitx-auth",
+      name: 'orbitx-auth',
       storage: createJSONStorage(() => AsyncStorage),
-
       partialize: (s) => ({
-        session: s.session,
+        session:               s.session,
         hasCompletedOnboarding: s.hasCompletedOnboarding,
       }),
-
       onRehydrateStorage: () => (state, error) => {
-        useAuthStore.setState({
-          hydrateComplete: true,
-        });
-
-        if (error) console.warn("[OrbitX] Hydration error:", error);
+        if (state?.session?.token) {
+          setAuthToken(state.session.token);
+        }
+        useAuthStore.setState({ hydrateComplete: true });
+        if (error) console.warn('[OrbitX] Hydration error:', error);
       },
     },
   ),
 );
-
 export function useIsLoggedIn() {
   return useAuthStore((s) => Boolean(s.session));
 }

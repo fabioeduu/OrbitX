@@ -1,43 +1,1 @@
-import { Stack } from "expo-router";
-import React, { useEffect } from "react";
-import { View } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-
-import { OrbitColors } from "../constants/Colors";
-import { useOrbitFonts } from "../hooks/useOrbitFonts";
-import { useAuthStore } from "../store/auth";
-
-export default function RootLayout() {
-  const [fontsLoaded] = useOrbitFonts();
-  const hydrateComplete = useAuthStore((s) => s.hydrateComplete);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (!useAuthStore.getState().hydrateComplete) {
-        useAuthStore.setState({ hydrateComplete: true });
-      }
-    }, 3000);
-    return () => clearTimeout(timeout);
-  }, []);
-
-  if (!fontsLoaded || !hydrateComplete) {
-    return <View style={{ flex: 1, backgroundColor: OrbitColors.deepBlack }} />;
-  }
-
-  return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
-          <Stack.Screen name="splash" />
-          <Stack.Screen name="onboarding" />
-          <Stack.Screen name="login" />
-          <Stack.Screen name="register" />
-          <Stack.Screen name="forgot-password" />
-          <Stack.Screen name="(tabs)" options={{ animation: "none" }} />
-          <Stack.Screen name="settings" />
-        </Stack>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
-  );
-}
+import { Stack } from "expo-router";import React, { useEffect } from "react";import { View } from "react-native";import { GestureHandlerRootView } from "react-native-gesture-handler";import { SafeAreaProvider } from "react-native-safe-area-context";import { OrbitColors } from "../constants/Colors";import { useOrbitFonts } from "../hooks/useOrbitFonts";import { useAuthStore } from "../store/auth";export default function RootLayout() {  const [fontsLoaded] = useOrbitFonts();  const hydrateComplete = useAuthStore((s) => s.hydrateComplete);  useEffect(() => {    const timeout = setTimeout(() => {      if (!useAuthStore.getState().hydrateComplete) {        useAuthStore.setState({ hydrateComplete: true });      }    }, 3000);    return () => clearTimeout(timeout);  }, []);  if (!fontsLoaded || !hydrateComplete) {    return <View style={{ flex: 1, backgroundColor: OrbitColors.deepBlack }} />;  }  return (    <GestureHandlerRootView style={{ flex: 1 }}>      <SafeAreaProvider>        <Stack screenOptions={{ headerShown: false, animation: "fade" }}>          <Stack.Screen name="splash" />          <Stack.Screen name="onboarding" />          <Stack.Screen name="login" />          <Stack.Screen name="register" />          <Stack.Screen name="forgot-password" />          <Stack.Screen name="(tabs)" options={{ animation: "none" }} />          <Stack.Screen name="settings" />        </Stack>      </SafeAreaProvider>    </GestureHandlerRootView>  );}
