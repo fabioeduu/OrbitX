@@ -41,6 +41,7 @@ import {
 import { AnimatedHeader } from "../../components/AnimatedHeader";
 import { useColors }     from "../../constants/Colors";
 import { useThemeStore } from "../../store/theme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const EONET_URL = `https://eonet.gsfc.nasa.gov/api/v3/events?status=open&days=30&limit=80`;
 
@@ -290,6 +291,8 @@ export default function MapScreen() {
   const colors = useColors();
   const mode   = useThemeStore((s) => s.mode);
 
+  const insets = useSafeAreaInsets();
+
   const webRef = useRef<WebView>(null);
   const [events,        setEvents]        = useState<EONETEvent[]>([]);
   const [loading,       setLoading]       = useState(true);
@@ -368,7 +371,7 @@ export default function MapScreen() {
   const errorWrapBg     = mode === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.deepBlack }]}>
+    <View style={[styles.root, { backgroundColor: colors.deepBlack, paddingTop: insets.top }]}>
       <LinearGradient
         colors={gradientColors}
         start={{ x: 0, y: 0 }}

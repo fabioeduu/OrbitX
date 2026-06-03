@@ -10,14 +10,15 @@ import {
   Text,
   TextInput,
   View,
+  Image,
 } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
-
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AnimatedHeader } from "../../components/AnimatedHeader";
 import { GlassContainer } from "../../components/GlassContainer";
 import { useColors } from "../../constants/Colors";
 import { useThemeStore } from "../../store/theme";
-import { sleep } from "../../utils/sleep";
+import { sendToNvidia, type ChatMessage } from "../../utils/nvidiaAI";
 
 type Role = "user" | "assistant";
 
@@ -33,41 +34,6 @@ const SUGGESTIONS = [
   "Risco térmico nas próximas 3h",
 ];
 
-function makeReply(prompt: string) {
-  const p = prompt.toLowerCase();
-
-  if (p.includes("kpi") || p.includes("resumo")) {
-    return (
-      "Resumo: consumo 742 kW (-3.1%), temperatura 36.8°C (estável), " +
-      "carbono 1.42 tCO₂e (-1.8%), eficiência 92% (+0.7%). " +
-      "Recomendo ajustar setpoints em +0.6°C nas zonas frias para reduzir " +
-      "consumo sem risco térmico."
-    );
-  }
-
-  if (p.includes("reduzir") || p.includes("10%")) {
-    return (
-      "Para reduzir ~10%: (1) otimizar setpoints +0.5°C em zonas estáveis, " +
-      "(2) aplicar fan curves com controle preditivo, " +
-      "(3) migrar workloads batch para janelas com menor fator de emissão, " +
-      "(4) habilitar pre-cooling antes de picos térmicos."
-    );
-  }
-
-  if (p.includes("risco") || p.includes("3h")) {
-    return (
-      "Risco térmico nas próximas 3h: baixo. Pequena elevação prevista em " +
-      "EU (Frankfurt) por umidade/temperatura externa. Mitigação: ativar " +
-      "pre-cooling leve e redistribuir cargas de alta densidade."
-    );
-  }
-
-  return (
-    "Entendi. Quer que eu analise por região (Mapa), por satélite/clima " +
-    "(Orbital) ou por economia/ESG (Métricas)?"
-  );
-}
-
 function Bubble({ role, text }: { role: Role; text: string }) {
   const colors = useColors();
   const mode = useThemeStore((s) => s.mode);
@@ -78,37 +44,63 @@ function Bubble({ role, text }: { role: Role; text: string }) {
   const userBorder = "rgba(59,130,246,0.30)";
 
   const aiBg = mode === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
-
-  const aiBorder =
-    mode === "dark" ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)";
+  const aiBorder = mode === "dark" ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)";
 
   return (
     <View
-      style={[
-        styles.bubble,
-        isUser
-          ? {
-              alignSelf: "flex-end",
-              backgroundColor: userBg,
-              borderColor: userBorder,
-            }
-          : {
-              alignSelf: "flex-start",
-              backgroundColor: aiBg,
-              borderColor: aiBorder,
-            },
-      ]}
+      style={{
+        flexDirection: isUser ? "row-reverse" : "row",
+        alignItems: "flex-end", // Alinha o ícone na base
+        alignSelf: isUser ? "flex-end" : "flex-start",
+        maxWidth: "90%",
+        gap: 8,
+      }}
     >
-      <Text
-        style={{
-          color: colors.softWhite,
-          fontFamily: "Inter_400Regular",
-          fontSize: 13,
-          lineHeight: 18,
-        }}
+      {!isUser && (
+        <View
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: 14,
+            overflow: "hidden",
+            borderWidth: StyleSheet.hairlineWidth,
+            borderColor: "rgba(255,255,255,0.12)",
+          }}
+        >
+          <Image
+            source={require('../../assets/images/X.png')} 
+            style={{ width: "100%", height: "100%", resizeMode: "cover" }}
+          />
+        </View>
+      )}
+
+      <View
+        style={[
+          styles.bubble,
+          isUser
+            ? {
+                backgroundColor: userBg,
+                borderColor: userBorder,
+                borderBottomRightRadius: 4,
+              }
+            : {
+                backgroundColor: aiBg,
+                borderColor: aiBorder,
+                borderBottomLeftRadius: 4,
+              },
+        ]}
       >
-        {text}
-      </Text>
+        <Text
+          style={{
+            color: colors.softWhite,
+            fontFamily: "Inter_400Regular",
+            fontSize: 13,
+            lineHeight: 18,
+          }}
+        >
+          {text}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -117,10 +109,14 @@ export default function AssistantScreen() {
   const colors = useColors();
   const mode = useThemeStore((s) => s.mode);
 
+  const insets = useSafeAreaInsets();
+
   const listRef = useRef<FlatList<Msg>>(null);
+  const historyRef = useRef<ChatMessage[]>([]);
 
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [messages, setMessages] = useState<Msg[]>([
     {
@@ -139,40 +135,37 @@ export default function AssistantScreen() {
 
   const send = useCallback(async (text: string) => {
     const value = text.trim();
-
     if (!value) return;
 
+    setError(null);
     setMessages((prev) => [
-      {
-        id: `u-${Date.now()}`,
-        role: "user",
-        text: value,
-      },
+      { id: `u-${Date.now()}`, role: "user", text: value },
       ...prev,
     ]);
-
     setInput("");
     setTyping(true);
 
-    await sleep(650);
+    try {
+      const reply = await sendToNvidia(historyRef.current, value);
 
-    setMessages((prev) => [
-      {
-        id: `a-${Date.now()}`,
-        role: "assistant",
-        text: makeReply(value),
-      },
-      ...prev,
-    ]);
+      historyRef.current = [
+        ...historyRef.current,
+        { role: "user", content: value },
+        { role: "assistant", content: reply },
+      ];
 
-    setTyping(false);
-
-    requestAnimationFrame(() => {
-      listRef.current?.scrollToOffset({
-        offset: 0,
-        animated: true,
+      setMessages((prev) => [
+        { id: `a-${Date.now()}`, role: "assistant", text: reply },
+        ...prev,
+      ]);
+    } catch (e: any) {
+      setError(e?.message ?? "Erro ao contatar a API.");
+    } finally {
+      setTyping(false);
+      requestAnimationFrame(() => {
+        listRef.current?.scrollToOffset({ offset: 0, animated: true });
       });
-    });
+    }
   }, []);
 
   const gradientColors: [string, string, string, string] =
@@ -205,7 +198,7 @@ export default function AssistantScreen() {
         styles.root,
         {
           backgroundColor: colors.deepBlack,
-        },
+          paddingTop: insets.top,},
       ]}
     >
       <LinearGradient
@@ -232,29 +225,54 @@ export default function AssistantScreen() {
           </Animated.View>
         )}
         ListHeaderComponent={
-          typing ? (
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-                paddingHorizontal: 22,
-                paddingVertical: 10,
-              }}
-            >
-              <Sparkles size={14} color={colors.neonGreen} />
-
-              <Text
+          <>
+            {typing && (
+              <View
                 style={{
-                  color: colors.premiumGray,
-                  fontFamily: "Inter_400Regular",
-                  fontSize: 12,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 0,
+                  paddingHorizontal: 20,
+                  paddingVertical: 10,
                 }}
               >
-                Orbit AI está digitando…
-              </Text>
-            </View>
-          ) : null
+                <Image
+                    source={require('../../assets/images/X.png')}
+                    style={{ 
+                      width: 65, 
+                      height: 55, 
+                      resizeMode: "contain" 
+                    }}
+                  />
+                  <Text style={{ color: colors.premiumGray, fontFamily: "Inter_400Regular", fontSize: 12 }}>
+                    Orbit AI está digitando...
+                  </Text>
+              </View>
+            )}
+            {error && (
+              <View
+                style={{
+                  marginHorizontal: 22,
+                  marginBottom: 8,
+                  padding: 10,
+                  borderRadius: 12,
+                  backgroundColor: "rgba(239,68,68,0.12)",
+                  borderColor: "rgba(239,68,68,0.30)",
+                  borderWidth: StyleSheet.hairlineWidth,
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#f87171",
+                    fontFamily: "Inter_400Regular",
+                    fontSize: 12,
+                  }}
+                >
+                  {error}
+                </Text>
+              </View>
+            )}
+          </>
         }
       />
 
@@ -353,11 +371,11 @@ const styles = StyleSheet.create({
   },
 
   bubble: {
-    maxWidth: "90%",
     paddingVertical: 12,
     paddingHorizontal: 12,
     borderRadius: 18,
     borderWidth: StyleSheet.hairlineWidth,
+    flexShrink: 1,
   },
 
   inputWrap: {
