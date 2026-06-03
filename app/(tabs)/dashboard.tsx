@@ -46,31 +46,32 @@ type Zone = { id: string; temp: number; load: number; status: AlertLevel };
 const MOCK_ALERTS: Alert[] = [
   {
     id: "1",
-    zone: "Zona A3",
-    message: "Temperatura acima do setpoint +1.4°C",
-    level: "warn",
+    zone: "ODATA SP01",
+    message: "Temperatura acima do limite (28.2°C) e carga em 95%",
+    level: "critical",
     time: "2min",
   },
   {
     id: "2",
-    zone: "Zona B1",
-    message: "Cooling estabilizado, PUE normalizado",
-    level: "ok",
+    zone: "Scala Tamboré",
+    message: "Carga de processamento elevada, atingindo 91%",
+    level: "warn",
     time: "5min",
   },
   {
     id: "3",
-    zone: "UPS-02",
-    message: "Variação de carga detectada: +18 kW",
-    level: "critical",
+    zone: "Equinix SP3",
+    message: "Sistema de resfriamento estabilizado, PUE ideal",
+    level: "ok",
     time: "8min",
   },
 ];
+
 const ZONES: Zone[] = [
-  { id: "A1", temp: 35.2, load: 0.78, status: "ok" },
-  { id: "A3", temp: 38.6, load: 0.91, status: "warn" },
-  { id: "B1", temp: 36.8, load: 0.72, status: "ok" },
-  { id: "B2", temp: 41.2, load: 0.95, status: "critical" },
+  { id: "Equinix SP3", temp: 21.2, load: 0.78, status: "ok" },
+  { id: "Scala Tamboré", temp: 23.6, load: 0.91, status: "warn" },
+  { id: "Ascenty Osasco", temp: 22.8, load: 0.72, status: "ok" },
+  { id: "ODATA SP01", temp: 28.2, load: 0.95, status: "critical" },
 ];
 const PUE_MIN = 1.0;
 const PUE_MAX = 2.2;
@@ -1046,7 +1047,7 @@ export default function DashboardScreen() {
           <AIRecommendationCard
             title="Recomendação Orbit AI"
             impactLabel="-12% kW"
-            body="Ajustar setpoints de refrigeração em +0.6°C nas zonas A3 e B1. Previsão: manter estabilidade térmica e reduzir consumo com margem segura. Zona B2 requer atenção imediata — carga em 95%."
+            body="Ajustar setpoints de refrigeração no Scala Tamboré e Ascenty Osasco. Previsão: manter estabilidade e reduzir consumo com margem segura. ODATA SP01 requer atenção imediata — risco térmico elevado."
           />
         </Animated.View>
         <View style={{ height: 130 }} />

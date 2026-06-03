@@ -1,6 +1,5 @@
-import { Sparkles } from "lucide-react-native";
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, Image } from "react-native";
 
 import { OrbitColors } from "../constants/Colors";
 import { PremiumCard } from "./PremiumCard";
@@ -16,7 +15,14 @@ export function AIRecommendationCard({ title, body, impactLabel }: Props) {
     <PremiumCard>
       <View style={styles.header}>
         <View style={styles.iconWrap}>
-          <Sparkles size={16} color={OrbitColors.neonGreen} />
+          <Image 
+              source={require('../assets/images/X.png')} 
+              style={{ 
+                width: 65, 
+                height: 45, 
+                resizeMode: "contain" 
+              }} 
+            />
         </View>
         <Text style={styles.title}>{title}</Text>
         {impactLabel ? <Text style={styles.impact}>{impactLabel}</Text> : null}
