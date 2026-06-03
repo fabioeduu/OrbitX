@@ -253,9 +253,16 @@ export default function SettingsScreen() {
   const onLogout = useCallback(() => {
     Alert.alert("Encerrar sessão", "Deseja sair da conta?", [
       { text: "Cancelar", style: "cancel" },
-      { text: "Sair", style: "destructive", onPress: () => logout() },
+      { 
+        text: "Sair", 
+        style: "destructive", 
+        onPress: () => {
+          logout();
+          router.replace('/onboarding');
+        } 
+      },
     ]);
-  }, [logout]);
+  }, [logout, router]);
 
   const onChangePassword = useCallback(() => {
     if (newPassword.length < 8) {
