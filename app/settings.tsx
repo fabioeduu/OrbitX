@@ -255,7 +255,7 @@ export default function SettingsScreen() {
       { text: "Cancelar", style: "cancel" },
       { 
         text: "Sair", 
-        style: "destructive", 
+        style: "destructive",
         onPress: () => {
           logout();
           router.replace('/onboarding');

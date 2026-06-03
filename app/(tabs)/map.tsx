@@ -39,54 +39,51 @@ import {
   Wind,
 } from "lucide-react-native";
 import { AnimatedHeader } from "../../components/AnimatedHeader";
-import { OrbitColors } from "../../constants/Colors";
+import { useColors }     from "../../constants/Colors";
+import { useThemeStore } from "../../store/theme";
 
-const NASA_KEY = process.env.EXPO_PUBLIC_NASA_API_KEY ?? "DEMO_KEY";
 const EONET_URL = `https://eonet.gsfc.nasa.gov/api/v3/events?status=open&days=30&limit=80`;
 
 const CATEGORY_SVG: Record<string, string> = {
-  wildfires: `<path d="M12 2c0 6-6 8-6 13a6 6 0 0 0 12 0c0-5-6-7-6-13z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+  wildfires:    `<path d="M12 2c0 6-6 8-6 13a6 6 0 0 0 12 0c0-5-6-7-6-13z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>`,
   severeStorms: `<polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round" stroke-linecap="round"/>`,
-  volcanoes: `<path d="M8 3L3 21h18L16 3" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/><path d="M10 12l-2 9" stroke="currentColor" stroke-width="2" fill="none"/><path d="M14 12l2 9" stroke="currentColor" stroke-width="2" fill="none"/>`,
-  floods: `<path d="M3 12h18M3 17c2-2 4 2 6 0s4-2 6 0 4 2 6 0M3 7c2-2 4 2 6 0s4-2 6 0 4 2 6 0" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>`,
-  earthquakes: `<polyline points="22 12 18 12 15 21 9 3 6 12 2 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
-  drought: `<circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`,
-  dustHaze: `<path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2M9.6 4.6A2 2 0 1 1 11 8H2M12.6 19.4A2 2 0 1 0 14 16H2" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>`,
-  landslides: `<path d="M3 17l4-8 4 4 4-6 4 10H3z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/><path d="M3 21h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`,
-  seaLakeIce: `<path d="M12 2v20M4.93 4.93l14.14 14.14M2 12h20M4.93 19.07L19.07 4.93" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`,
-  manmade: `<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2" fill="none"/><line x1="12" y1="9" x2="12" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`,
-  waterColor: `<path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10c0-3-1.5-5.5-3-7.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+  volcanoes:    `<path d="M8 3L3 21h18L16 3" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/><path d="M10 12l-2 9" stroke="currentColor" stroke-width="2" fill="none"/><path d="M14 12l2 9" stroke="currentColor" stroke-width="2" fill="none"/>`,
+  floods:       `<path d="M3 12h18M3 17c2-2 4 2 6 0s4-2 6 0 4 2 6 0M3 7c2-2 4 2 6 0s4-2 6 0 4 2 6 0" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+  earthquakes:  `<polyline points="22 12 18 12 15 21 9 3 6 12 2 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
+  drought:      `<circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`,
+  dustHaze:     `<path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2M9.6 4.6A2 2 0 1 1 11 8H2M12.6 19.4A2 2 0 1 0 14 16H2" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+  landslides:   `<path d="M3 17l4-8 4 4 4-6 4 10H3z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/><path d="M3 21h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`,
+  seaLakeIce:   `<path d="M12 2v20M4.93 4.93l14.14 14.14M2 12h20M4.93 19.07L19.07 4.93" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`,
+  manmade:      `<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2" fill="none"/><line x1="12" y1="9" x2="12" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`,
+  waterColor:   `<path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10c0-3-1.5-5.5-3-7.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>`,
 };
 
 const CATEGORY_LUCIDE: Record<string, (color: string) => React.ReactNode> = {
-  wildfires: (c) => <Flame size={15} color={c} />,
+  wildfires:    (c) => <Flame          size={15} color={c} />,
   severeStorms: (c) => <CloudLightning size={15} color={c} />,
-  volcanoes: (c) => <MountainSnow size={15} color={c} />,
-  floods: (c) => <Waves size={15} color={c} />,
-  earthquakes: (c) => <Activity size={15} color={c} />,
-  drought: (c) => <Sun size={15} color={c} />,
-  dustHaze: (c) => <Wind size={15} color={c} />,
-  landslides: (c) => <Layers size={15} color={c} />,
-  seaLakeIce: (c) => <Snowflake size={15} color={c} />,
-  manmade: (c) => <AlertOctagon size={15} color={c} />,
-  waterColor: (c) => <Droplets size={15} color={c} />,
+  volcanoes:    (c) => <MountainSnow   size={15} color={c} />,
+  floods:       (c) => <Waves          size={15} color={c} />,
+  earthquakes:  (c) => <Activity       size={15} color={c} />,
+  drought:      (c) => <Sun            size={15} color={c} />,
+  dustHaze:     (c) => <Wind           size={15} color={c} />,
+  landslides:   (c) => <Layers         size={15} color={c} />,
+  seaLakeIce:   (c) => <Snowflake      size={15} color={c} />,
+  manmade:      (c) => <AlertOctagon   size={15} color={c} />,
+  waterColor:   (c) => <Droplets       size={15} color={c} />,
 };
 
-const CATEGORY_CONFIG: Record<
-  string,
-  { color: string; label: string; risk: string }
-> = {
-  wildfires: { color: "#FF4500", label: "Incêndio", risk: "ALTO" },
-  severeStorms: { color: "#7B61FF", label: "Tempestade", risk: "MEDIO" },
-  volcanoes: { color: "#FF6B35", label: "Vulcão", risk: "ALTO" },
-  floods: { color: "#00B4D8", label: "Inundação", risk: "MEDIO" },
-  earthquakes: { color: "#FFB703", label: "Terremoto", risk: "ALTO" },
-  drought: { color: "#E9C46A", label: "Seca", risk: "BAIXO" },
-  dustHaze: { color: "#ADB5BD", label: "Poeira", risk: "BAIXO" },
-  landslides: { color: "#8B5E3C", label: "Deslizamento", risk: "MEDIO" },
-  seaLakeIce: { color: "#90E0EF", label: "Gelo", risk: "BAIXO" },
-  manmade: { color: "#E63946", label: "Antrópico", risk: "ALTO" },
-  waterColor: { color: "#48CAE4", label: "Água", risk: "BAIXO" },
+const CATEGORY_CONFIG: Record<string, { color: string; label: string; risk: string }> = {
+  wildfires:    { color: "#FF4500", label: "Incêndio",     risk: "ALTO"  },
+  severeStorms: { color: "#7B61FF", label: "Tempestade",   risk: "MEDIO" },
+  volcanoes:    { color: "#FF6B35", label: "Vulcão",       risk: "ALTO"  },
+  floods:       { color: "#00B4D8", label: "Inundação",    risk: "MEDIO" },
+  earthquakes:  { color: "#FFB703", label: "Terremoto",    risk: "ALTO"  },
+  drought:      { color: "#E9C46A", label: "Seca",         risk: "BAIXO" },
+  dustHaze:     { color: "#ADB5BD", label: "Poeira",       risk: "BAIXO" },
+  landslides:   { color: "#8B5E3C", label: "Deslizamento", risk: "MEDIO" },
+  seaLakeIce:   { color: "#90E0EF", label: "Gelo",         risk: "BAIXO" },
+  manmade:      { color: "#E63946", label: "Antrópico",    risk: "ALTO"  },
+  waterColor:   { color: "#48CAE4", label: "Água",         risk: "BAIXO" },
 };
 
 type EONETGeometry = {
@@ -101,14 +98,6 @@ type EONETEvent = {
   categories: { id: string; title: string }[];
   geometry: EONETGeometry[];
   sources: { id: string; url: string }[];
-};
-
-type FilterState = {
-  wildfires: boolean;
-  severeStorms: boolean;
-  volcanoes: boolean;
-  floods: boolean;
-  earthquakes: boolean;
 };
 
 const LEAFLET_SHELL = [
@@ -242,19 +231,13 @@ const LEAFLET_SHELL = [
   "</html>",
 ].join("\n");
 
-function buildLeafletHTML(
-  events: EONETEvent[],
-  svgMap: Record<string, string>,
-): string {
+function buildLeafletHTML(events: EONETEvent[], svgMap: Record<string, string>): string {
   const dataScript = [
     "<script>",
     "window.ORBIT_DATA = {",
-    "  events: " +
-      JSON.stringify(events).replace(/<\/script>/gi, "<\\/script>") +
-      ",",
+    "  events: " + JSON.stringify(events).replace(/<\/script>/gi, "<\\/script>") + ",",
     "  categories: " + JSON.stringify(CATEGORY_CONFIG) + ",",
-    "  svgIcons: " +
-      JSON.stringify(svgMap).replace(/<\/script>/gi, "<\\/script>"),
+    "  svgIcons: " + JSON.stringify(svgMap).replace(/<\/script>/gi, "<\\/script>"),
     "};",
     "<\/script>",
   ].join("\n");
@@ -263,46 +246,55 @@ function buildLeafletHTML(
 }
 
 const FilterChip = React.memo(function FilterChip({
-  catId,
-  count,
-  active,
-  onPress,
+  catId, count, active, onPress,
 }: {
-  catId: string;
-  count: number;
-  active: boolean;
-  onPress: () => void;
+  catId: string; count: number; active: boolean; onPress: () => void;
 }) {
-  const cfg = CATEGORY_CONFIG[catId];
+  const mode = useThemeStore((s) => s.mode);
+  const cfg  = CATEGORY_CONFIG[catId];
   if (!cfg) return null;
+
+  const inactiveBg     = mode === "dark" ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)";
+  const inactiveBorder = mode === "dark" ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)";
+
   return (
     <Pressable
       onPress={onPress}
       style={[
-        styles.chip,
-        active && { borderColor: cfg.color, backgroundColor: `${cfg.color}18` },
-        !active && { opacity: 0.45 },
+        {
+          flexDirection: "row", alignItems: "center", gap: 8,
+          paddingVertical: 8, paddingHorizontal: 12,
+          borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, minWidth: 110,
+        },
+        active
+          ? { borderColor: cfg.color, backgroundColor: `${cfg.color}18` }
+          : { opacity: 0.45, backgroundColor: inactiveBg, borderColor: inactiveBorder },
       ]}
     >
-      <View style={styles.chipIcon}>
+      <View style={{ width: 24, height: 24, alignItems: "center", justifyContent: "center" }}>
         {CATEGORY_LUCIDE[catId]?.(active ? cfg.color : "#64748B")}
       </View>
       <View>
-        <Text style={[styles.chipLabel, active && { color: cfg.color }]}>
+        <Text style={{ color: active ? cfg.color : "#CBD5E1", fontFamily: "Inter_600SemiBold", fontSize: 12 }}>
           {cfg.label}
         </Text>
-        <Text style={styles.chipCount}>{count} eventos</Text>
+        <Text style={{ color: "#64748B", fontFamily: "Inter_400Regular", fontSize: 10, marginTop: 1 }}>
+          {count} eventos
+        </Text>
       </View>
     </Pressable>
   );
 });
 
 export default function MapScreen() {
+  const colors = useColors();
+  const mode   = useThemeStore((s) => s.mode);
+
   const webRef = useRef<WebView>(null);
-  const [events, setEvents] = useState<EONETEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [counts, setCounts] = useState<Record<string, number>>({});
+  const [events,        setEvents]        = useState<EONETEvent[]>([]);
+  const [loading,       setLoading]       = useState(true);
+  const [error,         setError]         = useState<string | null>(null);
+  const [counts,        setCounts]        = useState<Record<string, number>>({});
   const [activeFilters, setActiveFilters] = useState<Record<string, boolean>>(
     Object.fromEntries(Object.keys(CATEGORY_CONFIG).map((k) => [k, true])),
   );
@@ -311,10 +303,9 @@ export default function MapScreen() {
   const livePulse = useSharedValue(1);
   useEffect(() => {
     livePulse.value = withRepeat(withTiming(0.3, { duration: 900 }), -1, true);
-  }, []);
+  }, []); // eslint-disable-line
   const liveStyle = useAnimatedStyle(() => ({ opacity: livePulse.value }));
 
-  // Busca dados da NASA EONET
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -325,27 +316,18 @@ export default function MapScreen() {
         if (!mounted) return;
         setEvents(data.events ?? []);
         setLastUpdated(
-          new Date().toLocaleTimeString("pt-BR", {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
+          new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
         );
       } catch (e: any) {
-        if (mounted)
-          setError("Falha ao conectar com a NASA EONET. Verifique a conexão.");
+        if (mounted) setError("Falha ao conectar com a NASA EONET. Verifique a conexão.");
       } finally {
         if (mounted) setLoading(false);
       }
     })();
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, []);
 
-  const mapHTML = useMemo(
-    () => buildLeafletHTML(events, CATEGORY_SVG),
-    [events],
-  );
+  const mapHTML = useMemo(() => buildLeafletHTML(events, CATEGORY_SVG), [events]);
 
   const onWebViewMessage = useCallback((e: any) => {
     try {
@@ -365,29 +347,30 @@ export default function MapScreen() {
   }, []);
 
   const totalActive = useMemo(
-    () =>
-      Object.entries(counts)
-        .filter(([k]) => activeFilters[k])
-        .reduce((s, [, v]) => s + v, 0),
+    () => Object.entries(counts).filter(([k]) => activeFilters[k]).reduce((s, [, v]) => s + v, 0),
     [counts, activeFilters],
   );
 
   const highRiskCount = useMemo(
-    () =>
-      Object.entries(counts)
-        .filter(([k]) => CATEGORY_CONFIG[k]?.risk === "ALTO")
-        .reduce((s, [, v]) => s + v, 0),
+    () => Object.entries(counts).filter(([k]) => CATEGORY_CONFIG[k]?.risk === "ALTO").reduce((s, [, v]) => s + v, 0),
     [counts],
   );
 
+  const gradientColors: [string, string, string] = mode === "dark"
+    ? [colors.deepBlack, "rgba(59,130,246,0.06)", colors.deepBlack]
+    : [colors.deepBlack, "rgba(59,130,246,0.03)", colors.deepBlack];
+
+  const statBadgeBg     = mode === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
+  const statBadgeBorder = mode === "dark" ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
+  const mapBorder       = mode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
+  const overlayBg       = mode === "dark" ? "#060D1F" : "#F0F4FF";
+  const overlayText     = mode === "dark" ? "#E2E8F0" : "#1E293B";
+  const errorWrapBg     = mode === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
+
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: colors.deepBlack }]}>
       <LinearGradient
-        colors={[
-          OrbitColors.deepBlack,
-          "rgba(59,130,246,0.06)",
-          OrbitColors.deepBlack,
-        ]}
+        colors={gradientColors}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
@@ -398,66 +381,55 @@ export default function MapScreen() {
         subtitle="Eventos naturais NASA EONET • infraestrutura em risco"
       />
 
-      <Animated.View
-        entering={FadeInDown.duration(350)}
-        style={styles.statusBar}
-      >
+      
+      <Animated.View entering={FadeInDown.duration(350)} style={styles.statusBar}>
         <View style={styles.statusLeft}>
           <Animated.View style={[styles.liveDot, liveStyle]} />
           <Text style={styles.liveText}>AO VIVO</Text>
           {lastUpdated ? (
-            <Text style={styles.updatedText}>· {lastUpdated}</Text>
+            <Text style={[styles.updatedText, { color: colors.premiumGray }]}>· {lastUpdated}</Text>
           ) : null}
         </View>
         <View style={styles.statusRight}>
-          <View style={styles.statBadge}>
-            <Text style={styles.statNum}>{totalActive}</Text>
-            <Text style={styles.statLabel}>eventos</Text>
+          <View style={[styles.statBadge, { backgroundColor: statBadgeBg, borderColor: statBadgeBorder }]}>
+            <Text style={[styles.statNum, { color: colors.softWhite }]}>{totalActive}</Text>
+            <Text style={[styles.statLabel, { color: colors.premiumGray }]}>eventos</Text>
           </View>
-          <View
-            style={[
-              styles.statBadge,
-              highRiskCount > 0 && styles.statBadgeDanger,
-            ]}
-          >
-            <Text
-              style={[
-                styles.statNum,
-                highRiskCount > 0 && { color: "#F87171" },
-              ]}
-            >
+          <View style={[
+            styles.statBadge,
+            { backgroundColor: statBadgeBg, borderColor: statBadgeBorder },
+            highRiskCount > 0 && styles.statBadgeDanger,
+          ]}>
+            <Text style={[styles.statNum, { color: colors.softWhite }, highRiskCount > 0 && { color: "#F87171" }]}>
               {highRiskCount}
             </Text>
-            <Text style={styles.statLabel}>alto risco</Text>
+            <Text style={[styles.statLabel, { color: colors.premiumGray }]}>alto risco</Text>
           </View>
         </View>
       </Animated.View>
 
-      <View style={styles.mapContainer}>
+      <View style={[styles.mapContainer, { borderColor: mapBorder }]}>
         {loading && (
-          <View style={styles.overlay}>
-            <ActivityIndicator color={OrbitColors.spaceBlue} size="large" />
-            <Text style={styles.overlayText}>Conectando à NASA…</Text>
-            <Text style={styles.overlaySubtext}>
+          <View style={[styles.overlay, { backgroundColor: overlayBg }]}>
+            <ActivityIndicator color={colors.spaceBlue} size="large" />
+            <Text style={[styles.overlayText, { color: overlayText }]}>Conectando à NASA…</Text>
+            <Text style={[styles.overlaySubtext, { color: colors.premiumGray }]}>
               Carregando eventos em tempo real
             </Text>
           </View>
         )}
 
         {error && (
-          <View style={styles.overlay}>
-            <View style={styles.errorIconWrap}>
-              <Radio size={28} color={OrbitColors.premiumGray} />
+          <View style={[styles.overlay, { backgroundColor: overlayBg }]}>
+            <View style={[styles.errorIconWrap, { backgroundColor: errorWrapBg, borderColor: colors.glassBorder }]}>
+              <Radio size={28} color={colors.premiumGray} />
             </View>
-            <Text style={styles.overlayText}>{error}</Text>
+            <Text style={[styles.overlayText, { color: overlayText }]}>{error}</Text>
           </View>
         )}
 
         {!loading && !error && (
-          <Animated.View
-            entering={FadeInDown.duration(500)}
-            style={StyleSheet.absoluteFill}
-          >
+          <Animated.View entering={FadeInDown.duration(500)} style={StyleSheet.absoluteFill}>
             <WebView
               ref={webRef}
               source={{ html: mapHTML }}
@@ -475,10 +447,7 @@ export default function MapScreen() {
       </View>
 
       {!loading && !error && (
-        <Animated.View
-          entering={FadeInRight.duration(400).delay(200)}
-          style={styles.filtersWrap}
-        >
+        <Animated.View entering={FadeInRight.duration(400).delay(200)} style={styles.filtersWrap}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -503,9 +472,8 @@ export default function MapScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: OrbitColors.deepBlack },
+  root: { flex: 1 },
 
-  // Status bar
   statusBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -513,42 +481,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
-  statusLeft: { flexDirection: "row", alignItems: "center", gap: 6 },
-  liveDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 999,
-    backgroundColor: "#22C55E",
-  },
-  liveText: {
-    color: "#22C55E",
-    fontFamily: "Inter_700Bold",
-    fontSize: 11,
-    letterSpacing: 0.08,
-  },
-  updatedText: {
-    color: "#64748B",
-    fontFamily: "Inter_400Regular",
-    fontSize: 11,
-  },
+  statusLeft:  { flexDirection: "row", alignItems: "center", gap: 6 },
   statusRight: { flexDirection: "row", gap: 8 },
+
+  liveDot: { width: 7, height: 7, borderRadius: 999, backgroundColor: "#22C55E" },
+  liveText: { color: "#22C55E", fontFamily: "Inter_700Bold", fontSize: 11, letterSpacing: 0.08 },
+  updatedText: { fontFamily: "Inter_400Regular", fontSize: 11 },
+
   statBadge: {
     flexDirection: "row",
     alignItems: "baseline",
     gap: 4,
-    backgroundColor: "rgba(255,255,255,0.05)",
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 10,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(255,255,255,0.10)",
   },
   statBadgeDanger: {
     backgroundColor: "rgba(239,68,68,0.10)",
     borderColor: "rgba(239,68,68,0.25)",
   },
-  statNum: { color: "#F1F5F9", fontFamily: "Inter_700Bold", fontSize: 14 },
-  statLabel: { color: "#64748B", fontFamily: "Inter_400Regular", fontSize: 10 },
+  statNum:   { fontFamily: "Inter_700Bold",    fontSize: 14 },
+  statLabel: { fontFamily: "Inter_400Regular", fontSize: 10 },
 
   mapContainer: {
     flex: 1,
@@ -556,7 +510,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: "hidden",
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(255,255,255,0.08)",
   },
   webview: { flex: 1, backgroundColor: "#060D1F" },
 
@@ -564,62 +517,26 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#060D1F",
     gap: 12,
     zIndex: 10,
   },
   overlayText: {
-    color: "#E2E8F0",
     fontFamily: "Inter_600SemiBold",
     fontSize: 15,
     textAlign: "center",
     paddingHorizontal: 24,
   },
-  overlaySubtext: {
-    color: "#64748B",
-    fontFamily: "Inter_400Regular",
-    fontSize: 13,
-  },
+  overlaySubtext: { fontFamily: "Inter_400Regular", fontSize: 13 },
+
   errorIconWrap: {
     width: 56,
     height: 56,
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.06)",
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(255,255,255,0.10)",
   },
 
-  filtersWrap: { paddingTop: 10 },
+  filtersWrap:   { paddingTop: 10 },
   filtersScroll: { paddingHorizontal: 12, gap: 8 },
-  chip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 14,
-    backgroundColor: "rgba(255,255,255,0.04)",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(255,255,255,0.10)",
-    minWidth: 110,
-  },
-  chipIcon: {
-    width: 24,
-    height: 24,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  chipLabel: {
-    color: "#CBD5E1",
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 12,
-  },
-  chipCount: {
-    color: "#64748B",
-    fontFamily: "Inter_400Regular",
-    fontSize: 10,
-    marginTop: 1,
-  },
 });
