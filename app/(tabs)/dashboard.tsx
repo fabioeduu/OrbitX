@@ -80,7 +80,7 @@ const LiveDot = React.memo(function LiveDot() {
   const pulse = useSharedValue(1);
   useEffect(() => {
     pulse.value = withRepeat(withTiming(0.2, { duration: 800 }), -1, true);
-  }, []); // eslint-disable-line
+  }, []);
   const style = useAnimatedStyle(() => ({ opacity: pulse.value }));
   const colors = useColors();
   return (
@@ -637,6 +637,7 @@ export default function DashboardScreen() {
     chartHistory.reduce((a, b) => a + b, 0) / chartHistory.length,
   );
 
+  
   const gradientColors: [string, string, string] =
     mode === "dark"
       ? [colors.deepBlack, "rgba(59,130,246,0.07)", colors.deepBlack]
