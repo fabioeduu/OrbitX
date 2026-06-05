@@ -77,7 +77,7 @@ export function OrbitButton({
           end={{ x: 1, y: 1 }}
           style={styles.gradient}
         >
-          <Text style={styles.text}>{loading ? "Loading…" : label}</Text>
+          <Text style={styles.text}>{loading ? "Carregando…" : label}</Text>
         </LinearGradient>
       </Pressable>
     </Animated.View>

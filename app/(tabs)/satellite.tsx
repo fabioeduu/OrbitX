@@ -50,7 +50,8 @@ const InfoRow = React.memo(function InfoRow({ icon, label, value, sub }: { icon:
   const iconBorder = mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
   return (
     <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 16 }}>
-      <View style={{ width: 36, height: 36, borderRadius: 11, justifyContent: 'center', alignItems: 'center', marginRight: 12, backgroundColor: iconBg, borderWidth: StyleSheet.hairlineWidth, borderColor: iconBorder }}>{icon}</View>
+      <View style={{ width: 36, height: 36, borderRadius: 11, justifyContent: 'center', alignItems: 'center', marginRight: 12, 
+        backgroundColor: iconBg, borderWidth: StyleSheet.hairlineWidth, borderColor: iconBorder }}>{icon}</View>
       <View style={{ flex: 1 }}>
         <Text style={{ color: colors.premiumGray, fontFamily: 'Inter_400Regular', fontSize: 11, marginBottom: 2 }}>{label}</Text>
         <Text style={{ color: colors.softWhite, fontFamily: 'Inter_700Bold', fontSize: 15 }}>{value}</Text>

@@ -47,7 +47,7 @@ export default function ForgotPasswordScreen() {
       <View style={styles.header}>
         <View style={styles.badge}>
           <KeyRound size={16} color={OrbitColors.spaceBlue} />
-          <Text style={styles.badgeText}>Account Recovery</Text>
+          <Text style={styles.badgeText}>Recuperação de Conta</Text>
         </View>
         <Text style={styles.title}>Esqueci a senha</Text>
         <Text style={styles.subtitle}>
@@ -57,7 +57,7 @@ export default function ForgotPasswordScreen() {
 
       <View style={styles.body}>
         <PremiumCard>
-          <Text style={styles.label}>Email</Text>
+          <Text style={styles.label}>E-mail</Text>
           <View style={styles.field}>
             <Mail size={16} color={OrbitColors.premiumGray} />
             <TextInput

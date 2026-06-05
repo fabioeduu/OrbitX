@@ -45,7 +45,7 @@ export default function OnboardingScreen() {
       },
       {
         key: "cloud",
-        title: "Cloud Monitoring",
+        title: "Monitoramento",
         body: "Observabilidade de datacenters em escala com alertas inteligentes e relatórios.",
         Icon: Cloud,
       },

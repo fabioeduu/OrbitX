@@ -1,6 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, useRouter } from "expo-router";
-import { Eye, EyeOff, Mail, Sparkles } from "lucide-react-native";
+import { Eye, EyeOff, Mail } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
 import {
     Alert,
@@ -9,6 +9,7 @@ import {
     Text,
     TextInput,
     View,
+    Image,
 } from "react-native";
 
 
@@ -61,8 +62,11 @@ export default function LoginScreen() {
 
       <View style={styles.header}>
         <View style={styles.badge}>
-          <Sparkles size={24} color={OrbitColors.neonGreen} />
-          <Text style={styles.badgeText}>Orbit X</Text>
+          <Image 
+              source={require('../assets/images/X.png')} 
+              style={{ width: 50, height: 50, resizeMode: "contain" }} 
+            />
+          <Text style={styles.badgeText}>ORBIT X</Text>
         </View>
         <Text style={styles.title}>Login</Text>
         <Text style={styles.subtitle}>
@@ -163,7 +167,7 @@ export default function LoginScreen() {
 
       <View style={styles.brandRow}>
         <Text style={styles.brandFoot}>
-          OrbitX - Feito para Global Solution
+          ORBIT X - Feito para Global Solution
         </Text>
       </View>
     </View>
@@ -188,10 +192,11 @@ const styles = StyleSheet.create({
   badgeText: {
     color: OrbitColors.softWhite,
     fontFamily: "Inter_600SemiBold",
-    fontSize: 12,
+    fontSize: 20,
+    letterSpacing: 3.5,
   },
   title: {
-    marginTop: 14,
+    marginTop: 50,
     color: OrbitColors.softWhite,
     fontFamily: "Inter_700Bold",
     fontSize: 30,
@@ -200,14 +205,14 @@ const styles = StyleSheet.create({
     marginTop: 10,
     color: OrbitColors.premiumGray,
     fontFamily: "Inter_400Regular",
-    fontSize: 13,
+    fontSize: 14,
     lineHeight: 18,
   },
   body: { paddingHorizontal: 22 },
   label: {
     color: OrbitColors.premiumGray,
     fontFamily: "Inter_500Medium",
-    fontSize: 12,
+    fontSize: 14,
     marginBottom: 8,
   },
   field: {
@@ -251,7 +256,7 @@ const styles = StyleSheet.create({
   },
   socialRow: { flexDirection: "row", gap: 10 },
   footerRow: {
-    marginTop: 16,
+    marginTop: 18,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
@@ -259,7 +264,7 @@ const styles = StyleSheet.create({
   footerText: {
     color: OrbitColors.premiumGray,
     fontFamily: "Inter_400Regular",
-    fontSize: 12,
+    fontSize: 14,
   },
   brandRow: {
     marginTop: "auto",
@@ -273,6 +278,6 @@ const styles = StyleSheet.create({
   brandFoot: {
     color: "rgba(154,164,178,0.7)",
     fontFamily: "Inter_400Regular",
-    fontSize: 11,
+    fontSize: 12,
   },
 });
