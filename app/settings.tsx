@@ -510,12 +510,12 @@ export default function SettingsScreen() {
                 </View>
                 <View style={styles.rowCenter}>
                   <Text style={[styles.rowTitle, { color: colors.softWhite }]}>
-                    OrbitX
+                    ORBIT X
                   </Text>
                   <Text
                     style={[styles.rowValue, { color: colors.premiumGray }]}
                   >
-                    Monitoramento de datacenter com IA
+                    Monitoramento de datacenter com IA e dados NASA em tempo real
                   </Text>
                 </View>
               </View>
@@ -541,35 +541,92 @@ export default function SettingsScreen() {
                   naturais via EONET, posição da ISS em tempo real e KPIs de
                   eficiência energética com análise por Inteligência Artificial.
                 </Text>
+               <Text style={[styles.aboutText, { color: colors.premiumGray }]}>
+                Aplicativo desenvolvido para a disciplina Mobile Application Development, Global Solution 2026 da FIAP.
+              </Text>
                 <View style={styles.aboutTags}>
-                  {[
-                    "React Native",
-                    "Expo SDK 54",
-                    "Zustand",
-                    "NASA API",
-                    "Reanimated v4",
-                  ].map((tag) => (
-                    <View
-                      key={tag}
+                {[
+                  "React Native",
+                  "Expo",
+                  "Zustand",
+                  "NASA API",
+                  "TypeScript",
+                  "Reanimated v4",
+                ].map((tag) => (
+                  <View
+                    key={tag}
+                    style={[
+                      styles.tag,
+                      {
+                        backgroundColor: `${colors.spaceBlue}18`,
+                        borderColor: `${colors.spaceBlue}30`,
+                      },
+                    ]}
+                  >
+                    <Text
                       style={[
-                        styles.tag,
+                        styles.tagText,
                         {
-                          backgroundColor: `${colors.spaceBlue}18`,
-                          borderColor: `${colors.spaceBlue}30`,
+                          color: colors.spaceBlue,
                         },
                       ]}
                     >
-                      <Text
-                        style={[styles.tagText, { color: colors.spaceBlue }]}
-                      >
-                        {tag}
-                      </Text>
-                    </View>
-                  ))}
+                      {tag}
+                    </Text>
+                  </View>
+                ))}
+
+                <View style={{ width: "100%", height: 12 }} />
+
+                <View
+                  style={[
+                    styles.tag,
+                    {
+                      backgroundColor: `${colors.neonGreen}18`,
+                      borderColor: `${colors.neonGreen}30`,
+                      alignSelf: "flex-start",
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.tagText,
+                      {
+                        color: colors.neonGreen,
+                        fontFamily: "Inter_600SemiBold",
+                      },
+                    ]}
+                  >
+                    Commit: 14ac38a
+                  </Text>
                 </View>
+                <View style={{ width: "100%", height: 8 }} />
+                <View
+                  style={[
+                    styles.tag,
+                    {
+                      backgroundColor: `${colors.spaceBlue}18`,
+                      borderColor: `${colors.spaceBlue}30`,
+                      alignSelf: "flex-start",
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.tagText,
+                      {
+                        color: colors.spaceBlue,
+                        fontFamily: "Inter_600SemiBold",
+                      },
+                    ]}
+                  >
+                    Versão: v1.0.0
+                  </Text>
+                </View>
+              </View>
                 <Pressable
                   onPress={() =>
-                    Linking.openURL("https://github.com/fabioeduu/OrbitX_GS")
+                    Linking.openURL("https://github.com/fabioeduu/OrbitX")
                   }
                   style={[
                     styles.repoBtn,
@@ -622,7 +679,7 @@ export default function SettingsScreen() {
         </Animated.View>
 
         <Text style={[styles.version, { color: colors.premiumGray }]}>
-          OrbitX v1.0.0 • FIAP Global Solution 2026
+          ORBIT X v1.0.0 • FIAP Global Solution 2026
         </Text>
       </ScrollView>
 
