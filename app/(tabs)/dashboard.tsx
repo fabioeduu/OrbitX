@@ -48,26 +48,27 @@ type Zone = { id: string; temp: number; load: number; status: AlertLevel };
 const MOCK_ALERTS: Alert[] = [
   {
     id: "1",
-    zone: "Zona A3",
-    message: "Temperatura acima do setpoint +1.4°C",
-    level: "warn",
+    zone: "ODATA SP01",
+    message: "Temperatura acima do limite (28.2°C) e carga em 95%",
+    level: "critical",
     time: "2min",
   },
   {
     id: "2",
-    zone: "Zona B1",
-    message: "Cooling estabilizado, PUE normalizado",
-    level: "ok",
+    zone: "Scala Tamboré",
+    message: "Carga de processamento elevada, atingindo 91%",
+    level: "warn",
     time: "5min",
   },
   {
     id: "3",
-    zone: "UPS-02",
-    message: "Variação de carga detectada: +18 kW",
-    level: "critical",
+    zone: "Equinix SP3",
+    message: "Sistema de resfriamento estabilizado, PUE ideal",
+    level: "ok",
     time: "8min",
   },
 ];
+
 const ZONES: Zone[] = [
   { id: "Equinix SP3", temp: 21.2, load: 0.78, status: "ok" },
   { id: "Scala Tamboré", temp: 23.6, load: 0.91, status: "warn" },
@@ -579,7 +580,27 @@ const ZoneCard = React.memo(function ZoneCard({ zone }: { zone: Zone }) {
     </View>
   );
 });
+const toAlertLevel = (severity: AlertSeverity): AlertLevel => {
+  if (severity === "CRITICAL" || severity === "HIGH") return "critical";
+  if (severity === "MEDIUM") return "warn";
+  return "ok";
+};
 
+const timeAgo = (iso: string): string => {
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (diff < 60) return diff + "s";
+  if (diff < 3600) return Math.floor(diff / 60) + "min";
+  return Math.floor(diff / 3600) + "h";
+};
+
+type Tone = "blue" | "green" | "gray" | "danger" | "warning";
+
+const STATUS_LABELS: Record<DatacenterStatus, { label: string; tone: Tone }> = {
+  ONLINE: { label: "Online", tone: "green" },
+  COOLING_STABLE: { label: "Resfriamento", tone: "blue" },
+  AI_OPTIMIZED: { label: "IA Ativa", tone: "blue" },
+  LOW_CARBON: { label: "Baixo Carbono", tone: "green" },
+};
 export default function DashboardScreen() {
   const router = useRouter();
   const colors = useColors();
@@ -1080,7 +1101,7 @@ export default function DashboardScreen() {
           <AIRecommendationCard
             title="Recomendação Orbit AI"
             impactLabel="-12% kW"
-            body="Ajustar setpoints de refrigeração em +0.6°C nas zonas A3 e B1. Previsão: manter estabilidade térmica e reduzir consumo com margem segura. Zona B2 requer atenção imediata — carga em 95%."
+            body="Ajustar setpoints de refrigeração no Scala Tamboré e Ascenty Osasco. Previsão: manter estabilidade e reduzir consumo com margem segura. ODATA SP01 requer atenção imediata — risco térmico elevado."
           />
         </Animated.View>
         <View style={{ height: 130 }} />
@@ -1122,3 +1143,4 @@ const styles = StyleSheet.create({
   gridItem: { width: "47.5%" },
   section: { paddingHorizontal: 20, marginTop: 16 },
 });
+

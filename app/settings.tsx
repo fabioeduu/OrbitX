@@ -180,7 +180,6 @@ export default function SettingsScreen() {
   const onLogout = useCallback(() => {
     Alert.alert("Encerrar sessão", "Deseja sair da conta?", [
       { text: "Cancelar", style: "cancel" },
-<<<<<<< HEAD
       { 
         text: "Sair", 
         style: "destructive",
@@ -188,15 +187,6 @@ export default function SettingsScreen() {
           logout();
           router.replace('/onboarding');
         } 
-=======
-      {
-        text: "Sair",
-        style: "destructive",
-        onPress: async () => {
-          await logout();
-          router.replace("/login");
-        },
->>>>>>> renato/main
       },
     ]);
   }, [logout, router]);
@@ -363,7 +353,6 @@ export default function SettingsScreen() {
                   <Info size={16} color={colors.spaceBlue} />
                 </View>
                 <View style={styles.rowCenter}>
-<<<<<<< HEAD
                   <Text style={[styles.rowTitle, { color: colors.softWhite }]}>
                     ORBIT X
                   </Text>
@@ -372,10 +361,6 @@ export default function SettingsScreen() {
                   >
                     Monitoramento de datacenter com IA e dados NASA em tempo real
                   </Text>
-=======
-                  <Text style={[styles.rowTitle, { color: colors.softWhite }]}>OrbitX</Text>
-                  <Text style={[styles.rowValue, { color: colors.premiumGray }]}>Monitoramento de datacenter com IA</Text>
->>>>>>> renato/main
                 </View>
               </View>
               {showAbout ? <ChevronUp size={14} color={colors.premiumGray} /> : <ChevronDown size={14} color={colors.premiumGray} />}
@@ -393,7 +378,6 @@ export default function SettingsScreen() {
                 Aplicativo desenvolvido para a disciplina Mobile Application Development, Global Solution 2026 da FIAP.
               </Text>
                 <View style={styles.aboutTags}>
-<<<<<<< HEAD
                 {[
                   "React Native",
                   "Expo",
@@ -448,13 +432,6 @@ export default function SettingsScreen() {
                   >
                     Commit: 14ac38a
                   </Text>
-=======
-                  {["React Native", "Expo SDK 54", "Zustand", "NASA API", "Reanimated v4"].map((tag) => (
-                    <View key={tag} style={[styles.tag, { backgroundColor: `${colors.spaceBlue}18`, borderColor: `${colors.spaceBlue}30` }]}>
-                      <Text style={[styles.tagText, { color: colors.spaceBlue }]}>{tag}</Text>
-                    </View>
-                  ))}
->>>>>>> renato/main
                 </View>
                 <View style={{ width: "100%", height: 8 }} />
                 <View
@@ -481,7 +458,6 @@ export default function SettingsScreen() {
                 </View>
               </View>
                 <Pressable
-<<<<<<< HEAD
                   onPress={() =>
                     Linking.openURL("https://github.com/fabioeduu/OrbitX")
                   }
@@ -493,10 +469,6 @@ export default function SettingsScreen() {
                     },
                   ]}
                 >
-=======
-                  onPress={() => Linking.openURL("https://github.com/fabioeduu/OrbitX_GS")}
-                  style={[styles.repoBtn, { backgroundColor: `${colors.spaceBlue}14`, borderColor: `${colors.spaceBlue}28` }]}>
->>>>>>> renato/main
                   <Github size={14} color={colors.spaceBlue} />
                   <Text style={[styles.repoBtnText, { color: colors.spaceBlue }]}>Ver repositório no GitHub</Text>
                   <ExternalLink size={12} color={colors.spaceBlue} />
