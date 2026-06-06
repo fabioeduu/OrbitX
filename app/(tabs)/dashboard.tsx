@@ -10,7 +10,7 @@ import {
   Thermometer,
   Wind,
   XOctagon,
-  Zap
+  Zap,
 } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -31,7 +31,9 @@ import { EnergyChart } from "../../components/EnergyChart";
 import { PremiumCard } from "../../components/PremiumCard";
 import { StatusBadge } from "../../components/StatusBadge";
 import { useColors } from "../../constants/Colors";
+import { dashboardApi } from "../../services/orbitApi";
 import { useThemeStore } from "../../store/theme";
+import type { AlertSeverity, DatacenterStatus } from "../../types/api";
 
 type AlertLevel = "ok" | "warn" | "critical";
 type Alert = {
@@ -46,27 +48,26 @@ type Zone = { id: string; temp: number; load: number; status: AlertLevel };
 const MOCK_ALERTS: Alert[] = [
   {
     id: "1",
-    zone: "ODATA SP01",
-    message: "Temperatura acima do limite (28.2°C) e carga em 95%",
-    level: "critical",
+    zone: "Zona A3",
+    message: "Temperatura acima do setpoint +1.4°C",
+    level: "warn",
     time: "2min",
   },
   {
     id: "2",
-    zone: "Scala Tamboré",
-    message: "Carga de processamento elevada, atingindo 91%",
-    level: "warn",
+    zone: "Zona B1",
+    message: "Cooling estabilizado, PUE normalizado",
+    level: "ok",
     time: "5min",
   },
   {
     id: "3",
-    zone: "Equinix SP3",
-    message: "Sistema de resfriamento estabilizado, PUE ideal",
-    level: "ok",
+    zone: "UPS-02",
+    message: "Variação de carga detectada: +18 kW",
+    level: "critical",
     time: "8min",
   },
 ];
-
 const ZONES: Zone[] = [
   { id: "Equinix SP3", temp: 21.2, load: 0.78, status: "ok" },
   { id: "Scala Tamboré", temp: 23.6, load: 0.91, status: "warn" },
@@ -589,6 +590,12 @@ export default function DashboardScreen() {
   const [carbon, setCarbon] = useState(1.42);
   const [eff, setEff] = useState(92);
   const [pue, setPue] = useState(1.48);
+  const [aiRecommendation, setAiRecommendation] = useState(
+    "Carregando recomendação da IA…",
+  );
+  const [overallStatus, setOverallStatus] =
+    useState<DatacenterStatus>("ONLINE");
+  const [alerts, setAlerts] = useState<Alert[]>([]);
   const [chartHistory, setChartHistory] = useState<number[]>(() =>
     Array.from({ length: 24 }).map(
       (_, i) => 680 + Math.sin(i / 2) * 35 + (i % 3) * 10,
@@ -597,31 +604,48 @@ export default function DashboardScreen() {
   const energyBaseline = useRef(742);
 
   useEffect(() => {
-    const id = setInterval(() => {
-      setEnergy((v) => {
-        const n = Math.round(v + (Math.random() > 0.5 ? 3 : -2));
-        setChartHistory((h) => [...h.slice(1), n]);
-        return n;
-      });
-      setTemp(
-        (v) => Math.round((v + (Math.random() > 0.5 ? 0.2 : -0.15)) * 10) / 10,
-      );
-      setCarbon(
-        (v) =>
-          Math.round((v + (Math.random() > 0.5 ? 0.03 : -0.02)) * 100) / 100,
-      );
-      setEff((v) =>
-        Math.max(80, Math.min(99, v + (Math.random() > 0.5 ? 1 : -1))),
-      );
-      setPue((v) =>
-        parseFloat(
-          Math.max(
-            1.0,
-            Math.min(2.2, v + (Math.random() > 0.5 ? 0.01 : -0.01)),
-          ).toFixed(2),
-        ),
-      );
-    }, 2200);
+    const fetchKpis = async () => {
+      try {
+        const { data } = await dashboardApi.getKpis();
+        const newEnergy = Number(data.energyConsumptionKwh);
+        setEnergy(newEnergy);
+        setTemp(data.currentTemperatureCelsius);
+        setCarbon(Number(data.carbonEmissionTons));
+        setPue(data.powerUsageEffectiveness);
+        setEff(Math.round((1 - data.aiInsight.overheatProbability) * 100));
+        setAiRecommendation(data.aiInsight.recommendation);
+        setOverallStatus(data.overallStatus);
+        setChartHistory((h) => [...h.slice(1), newEnergy]);
+      } catch {}
+    };
+
+    fetchKpis();
+    const id = setInterval(fetchKpis, 5_000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        const { data } = await dashboardApi.getAlerts();
+        const list =
+          (Object.values(
+            data._embedded,
+          )[0] as import("../../types/api").AlertResponse[]) ?? [];
+        setAlerts(
+          list.slice(0, 5).map((a) => ({
+            id: String(a.id),
+            zone: a.sourceComponent || a.title,
+            message: a.message,
+            level: toAlertLevel(a.severity),
+            time: timeAgo(a.createdAt),
+          })),
+        );
+      } catch {}
+    };
+
+    fetchAlerts();
+    const id = setInterval(fetchAlerts, 10_000);
     return () => clearInterval(id);
   }, []);
 
@@ -696,10 +720,13 @@ export default function DashboardScreen() {
           entering={FadeInDown.duration(350)}
           style={styles.statusRow}
         >
-          <StatusBadge label="Online" tone="green" />
-          <StatusBadge label="Cooling Stable" tone="blue" />
-          <StatusBadge label="AI Otimizado" tone="green" />
-          <StatusBadge label="Baixo Carbono" tone="gray" />
+          {Object.entries(STATUS_LABELS).map(([key, { label, tone }]) => (
+            <StatusBadge
+              key={key}
+              label={label}
+              tone={overallStatus === key ? tone : "gray"}
+            />
+          ))}
         </Animated.View>
 
         <View style={styles.grid}>
@@ -719,7 +746,7 @@ export default function DashboardScreen() {
                 label: "Temperatura",
                 value: `${temp}°C`,
                 delta: temp > 38 ? "Atenção" : "Normal",
-                tone: (temp > 38 ? "warning" : "green") as const,
+                tone: (temp > 38 ? "warning" : "green") as "warning" | "green",
                 icon: (
                   <Thermometer
                     size={14}
@@ -741,13 +768,18 @@ export default function DashboardScreen() {
               },
 
               {
-                label: "Eficiência",
+                label: "IA Saúde",
                 value: `${eff}%`,
-                delta: "+0.7%",
-                tone: "green" as const,
-                icon: <Activity size={14} color={colors.neonGreen} />,
-                sub: "Uptime dos sistemas",
-                iColor: colors.neonGreen,
+                delta: eff >= 80 ? "Estável" : "Atenção",
+                tone: (eff < 70 ? "warning" : "green") as "warning" | "green",
+                icon: (
+                  <Activity
+                    size={14}
+                    color={eff < 70 ? colors.warning : colors.neonGreen}
+                  />
+                ),
+                sub: "Índice de confiança da IA",
+                iColor: eff < 70 ? colors.warning : colors.neonGreen,
               },
             ] as const
           ).map((kpi, i) => {
@@ -1038,7 +1070,7 @@ export default function DashboardScreen() {
           entering={FadeInDown.duration(400).delay(320)}
           style={styles.section}
         >
-          <AlertFeed alerts={MOCK_ALERTS} />
+          <AlertFeed alerts={alerts} />
         </Animated.View>
 
         <Animated.View
@@ -1048,7 +1080,7 @@ export default function DashboardScreen() {
           <AIRecommendationCard
             title="Recomendação Orbit AI"
             impactLabel="-12% kW"
-            body="Ajustar setpoints de refrigeração no Scala Tamboré e Ascenty Osasco. Previsão: manter estabilidade e reduzir consumo com margem segura. ODATA SP01 requer atenção imediata — risco térmico elevado."
+            body="Ajustar setpoints de refrigeração em +0.6°C nas zonas A3 e B1. Previsão: manter estabilidade térmica e reduzir consumo com margem segura. Zona B2 requer atenção imediata — carga em 95%."
           />
         </Animated.View>
         <View style={{ height: 130 }} />

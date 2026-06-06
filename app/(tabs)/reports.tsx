@@ -1,243 +1,1 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withTiming, interpolate, Easing } from 'react-native-reanimated';
-import { Share2, TrendingDown, Leaf, Zap, Award, BarChart3, Calendar, ChevronDown, ChevronUp } from 'lucide-react-native';
-
-import { AIRecommendationCard } from '../../components/AIRecommendationCard';
-import { AnimatedHeader }       from '../../components/AnimatedHeader';
-import { EnergyChart }          from '../../components/EnergyChart';
-import { OrbitButton }          from '../../components/OrbitButton';
-import { PremiumCard }          from '../../components/PremiumCard';
-import { useColors }            from '../../constants/Colors';
-import { useThemeStore }        from '../../store/theme';
-
-type Period = '7d' | '30d' | '90d';
-type ESGMetric = { id: string; label: string; value: string; subValue: string; delta: string; positive: boolean; icon: React.ReactNode };
-
-const PERIOD_DATA = {
-  '7d':  { label: 'Últimos 7 dias',   score: 'A+', carbonReduction: '18%', energySaving: '12%', series: [420,435,428,441,415,408,412,419,430,422,410,418,425,416], seriesBefore: [480,495,488,501,475,468,472,479,490,482,470,478,485,476] },
-  '30d': { label: 'Últimos 30 dias',  score: 'A',  carbonReduction: '14%', energySaving: '9%',  series: [440,455,448,461,435,428,432,439,450,442,430,438,445,436], seriesBefore: [510,525,518,531,505,498,502,509,520,512,500,508,515,506] },
-  '90d': { label: 'Últimos 90 dias',  score: 'B+', carbonReduction: '8%',  energySaving: '5%',  series: [460,475,468,481,455,448,452,459,470,462,450,458,465,456], seriesBefore: [530,545,538,551,525,518,522,529,540,532,520,528,535,526] },
-};
-
-const SCORE_TONE: Record<string, string> = { 'A+': '#22C55E', 'A': '#3B82F6', 'B+': '#F59E0B' };
-
-const PeriodSelector = React.memo(function PeriodSelector({ selected, onChange }: { selected: Period; onChange: (p: Period) => void }) {
-  const colors = useColors();
-  const mode   = useThemeStore((s) => s.mode);
-  const chipBg     = mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-  const chipBorder = mode === 'dark' ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.10)';
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 }}>
-      <Calendar size={13} color={colors.premiumGray} />
-      <Text style={{ color: colors.premiumGray, fontFamily: 'Inter_400Regular', fontSize: 12 }}>Período:</Text>
-      {(['7d','30d','90d'] as Period[]).map((key) => (
-        <Pressable key={key} onPress={() => onChange(key)}
-          style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: StyleSheet.hairlineWidth,
-            backgroundColor: selected === key ? `${colors.spaceBlue}22` : chipBg,
-            borderColor:     selected === key ? colors.spaceBlue : chipBorder }}>
-          <Text style={{ color: selected === key ? colors.softWhite : colors.premiumGray, fontFamily: 'Inter_500Medium', fontSize: 12 }}>
-            {key === '7d' ? '7 dias' : key === '30d' ? '30 dias' : '90 dias'}
-          </Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-});
-
-const ScoreCard = React.memo(function ScoreCard({ score, carbonReduction, energySaving, series, seriesBefore }: { score: string; carbonReduction: string; energySaving: string; series: number[]; seriesBefore: number[] }) {
-  const colors     = useColors();
-  const mode       = useThemeStore((s) => s.mode);
-  const scoreTone  = SCORE_TONE[score] ?? colors.spaceBlue;
-  const [showBefore, setShowBefore] = useState(false);
-  const activeSeries = showBefore ? seriesBefore : series;
-  const avg = Math.round(activeSeries.reduce((a, b) => a + b, 0) / activeSeries.length);
-  const min = Math.min(...activeSeries);
-  const max = Math.max(...activeSeries);
-  const dividerColor  = mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
-  const borderColor   = mode === 'dark' ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
-  return (
-    <PremiumCard>
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
-        <View style={{ flex: 1 }}>
-          <Text style={{ color: colors.premiumGray, fontFamily: 'Inter_500Medium', fontSize: 12, marginBottom: 6 }}>Pontuação Sustentável</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Award size={16} color={scoreTone} />
-            <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 40, lineHeight: 42, letterSpacing: -0.5, color: scoreTone }}>{score}</Text>
-          </View>
-        </View>
-        <View style={{ gap: 10, alignItems: 'flex-end' }}>
-          {[{ color: colors.neonGreen, icon: <Leaf size={12} color={colors.neonGreen} />, 
-          val: `-${carbonReduction}`, label: 'CO₂', bg: `${colors.neonGreen}18`, border: `${colors.neonGreen}30` },
-
-            { color: colors.spaceBlue, icon: <Zap  size={12} color={colors.spaceBlue} />, 
-            val: `-${energySaving}`,  label: 'Energia', bg: `${colors.spaceBlue}18`, border: `${colors.spaceBlue}30` }
-          ].map((m) => (
-            <View key={m.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <View style={{ width: 24, height: 24, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: m.bg, borderWidth: StyleSheet.hairlineWidth, borderColor: m.border }}>{m.icon}</View>
-              <View>
-                <Text style={{ color: m.color, fontFamily: 'Inter_700Bold', fontSize: 13 }}>{m.val}</Text>
-                <Text style={{ color: colors.premiumGray, fontFamily: 'Inter_400Regular', fontSize: 10 }}>{m.label}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-      </View>
-      <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: dividerColor, marginBottom: 14 }} />
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <View style={{ width: 6, height: 6, borderRadius: 999, backgroundColor: showBefore ? colors.danger : colors.spaceBlue }} />
-          <Text style={{ color: colors.premiumGray, fontFamily: 'Inter_400Regular', 
-            fontSize: 11 }}>{showBefore ? 'Antes da otimização' : 'Após otimização'}</Text>
-        </View>
-        <Pressable onPress={() => setShowBefore(v => !v)}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 5, 
-          paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, backgroundColor: `${colors.spaceBlue}18`, 
-          borderWidth: StyleSheet.hairlineWidth, borderColor: `${colors.spaceBlue}35` }}>
-          <BarChart3 size={12} color={colors.spaceBlue} />
-          <Text style={{ color: colors.spaceBlue, fontFamily: 'Inter_500Medium', fontSize: 11 }}>{showBefore ? 'Ver depois' : 'Ver antes'}</Text>
-        </Pressable>
-      </View>
-      <EnergyChart points={activeSeries} />
-      <View style={{ flexDirection: 'row', marginTop: 12, paddingTop: 12, 
-        borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: borderColor }}>
-        {[{ label: 'Mín', val: `${min} kW`, color: colors.softWhite },
-          { label: 'Média', val: `${avg} kW`, color: colors.spaceBlue, center: true },
-          { label: 'Máx', val: `${max} kW`, color: colors.warning }
-        ].map((s) => (
-          <View key={s.label} style={[{ flex: 1 }, s.center && { alignItems: 'center', borderLeftWidth: StyleSheet.hairlineWidth, borderRightWidth: StyleSheet.hairlineWidth, borderColor }]}>
-            <Text style={{ color: colors.premiumGray, fontFamily: 'Inter_400Regular', fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.06, marginBottom: 2 }}>{s.label}</Text>
-            <Text style={{ color: s.color, fontFamily: 'Inter_700Bold', fontSize: 13 }}>{s.val}</Text>
-          </View>
-        ))}
-      </View>
-    </PremiumCard>
-  );
-});
-
-const ESGBreakdown = React.memo(function ESGBreakdown({ metrics }: { metrics: ESGMetric[] }) {
-  const colors  = useColors();
-  const mode    = useThemeStore((s) => s.mode);
-  const [expanded, setExpanded] = useState(false);
-  const visible   = expanded ? metrics : metrics.slice(0, 3);
-  const borderC   = mode === 'dark' ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
-  const iconBg    = mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
-  const iconBorder= mode === 'dark' ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.08)';
-  return (
-    <PremiumCard>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-        <TrendingDown size={14} color={colors.neonGreen} />
-        <Text style={{ color: colors.softWhite, fontFamily: 'Inter_600SemiBold', fontSize: 14, flex: 1 }}>Métricas ESG</Text>
-      </View>
-      {visible.map((m, i) => (
-        <Animated.View key={m.id} entering={FadeInDown.duration(280).delay(i * 50)}
-          style={[{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11 }, i < visible.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: borderC }]}>
-          <View style={{ width: 28, height: 28, borderRadius: 10, alignItems: 'center', justifyContent: 'center', 
-            backgroundColor: iconBg, borderWidth: StyleSheet.hairlineWidth, borderColor: iconBorder }}>{m.icon}</View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: colors.softWhite, fontFamily: 'Inter_500Medium', fontSize: 13 }}>{m.label}</Text>
-            <Text style={{ color: colors.premiumGray, fontFamily: 'Inter_400Regular', fontSize: 10, marginTop: 2 }}>{m.subValue}</Text>
-          </View>
-          <View style={{ alignItems: 'flex-end' }}>
-            <Text style={{ color: colors.softWhite, fontFamily: 'Inter_700Bold', fontSize: 13 }}>{m.value}</Text>
-            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, marginTop: 2, 
-              color: m.positive ? colors.neonGreen : colors.danger }}>{m.delta}</Text>
-          </View>
-        </Animated.View>
-      ))}
-      {metrics.length > 3 && (
-        <Pressable onPress={() => setExpanded(v => !v)}
-          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, 
-          paddingTop: 12, marginTop: 4, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: borderC }}>
-          {expanded ? <ChevronUp size={14} color={colors.spaceBlue} /> : <ChevronDown size={14} color={colors.spaceBlue} />}
-          <Text style={{ color: colors.spaceBlue, fontFamily: 'Inter_500Medium', 
-            fontSize: 12 }}>{expanded ? 'Ver menos' : `Ver mais ${metrics.length - 3} métricas`}</Text>
-        </Pressable>
-      )}
-    </PremiumCard>
-  );
-});
-
-export default function ReportsScreen() {
-  const colors = useColors();
-  const mode   = useThemeStore((s) => s.mode);
-  const [period,    setPeriod]    = useState<Period>('7d');
-  const [exporting, setExporting] = useState(false);
-  const data = PERIOD_DATA[period];
-
-  const handleExport = useCallback(async () => {
-    setExporting(true);
-    await new Promise(r => setTimeout(r, 1800));
-    setExporting(false);
-    Alert.alert('Relatório exportado', `Relatório ESG (${data.label}) 
-      gerado com sucesso.\n\nArquivo: OrbitX_ESG_Report_${period}.pdf`, [{ text: 'OK' }]);
-  }, [period, data.label]);
-
-  const handleShare = useCallback(async () => {
-    try {
-      await Share.share({ title: `OrbitX ESG Report — ${data.label}`, 
-        message: `OrbitX ESG Report — ${data.label}\n\nSustainable Score: ${data.score}\nRedução de carbono: ${data.carbonReduction}\nEconomia energética: ${data.energySaving}\n\nGerado via OrbitX` });
-    } catch {}
-  }, [data]);
-
-  const esgMetrics: ESGMetric[] = useMemo(() => [
-    { id: 'carbon', label: 'Emissão de carbono', value: '1.21 tCO₂e', 
-      subValue: `Meta: 1.10 tCO₂e • ${data.label}`, delta: `-${data.carbonReduction}`, positive: true,  icon: <Leaf size={13} color={colors.neonGreen} /> },
-    { id: 'energy', label: 'Consumo energético', value: '418 kW/h',   
-      subValue: `Baseline: 480 kW/h • ${data.label}`, delta: `-${data.energySaving}`,  positive: true,  icon: <Zap size={13} color={colors.spaceBlue} /> },
-    { id: 'pue', label: 'PUE médio', value: '1.46', 
-      subValue: 'Meta: ≤ 1.40 • Acima da meta', delta: '+0.06',  positive: false, icon: <BarChart3 size={13} color={colors.warning} /> },
-    { id: 'renewable', label: 'Energia renovável',   value: '34%', 
-      subValue: 'Matriz elétrica BR-SP • Enel', delta: '+6pp', positive: true,  icon: <Leaf size={13} color={colors.neonGreen} /> },
-    { id: 'uptime', label: 'Disponibilidade', value: '99.97%', 
-      subValue: 'SLA tier IV • Nenhum incidente', delta: '0 ocorrências', positive: true,  icon: <Award    size={13} color={colors.softWhite} /> },
-  ], [data.label, data.carbonReduction, data.energySaving, colors]);
-
-  const gradientColors: [string, string, string] = mode === 'dark'
-    ? [colors.deepBlack, 'rgba(34,197,94,0.07)', colors.deepBlack]
-    : [colors.deepBlack, 'rgba(34,197,94,0.03)', colors.deepBlack];
-
-  const shareBg     = mode === 'dark' ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
-  const shareBorder = mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.10)';
-
-  return (
-    <View style={[styles.root, { backgroundColor: colors.deepBlack }]}>
-      <LinearGradient colors={gradientColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <AnimatedHeader title="Métricas" subtitle="Economia energética • ESG • comparativo antes/depois" />
-
-        <Animated.View entering={FadeInDown.duration(380)} style={styles.section}><PeriodSelector selected={period} onChange={setPeriod} /></Animated.View>
-        <Animated.View entering={FadeInDown.duration(420).delay(60)} style={styles.section}>
-          <ScoreCard score={data.score} carbonReduction={data.carbonReduction} energySaving={data.energySaving} series={data.series} seriesBefore={data.seriesBefore} />
-        </Animated.View>
-
-        <Animated.View entering={FadeInDown.duration(420).delay(120)} style={styles.section}><ESGBreakdown metrics={esgMetrics} /></Animated.View>
-        <Animated.View entering={FadeInDown.duration(420).delay(180)} style={styles.section}>
-          <AIRecommendationCard title="ESG Insight" impactLabel="-0.21 tCO₂e" body="Migrar cargas batch para janelas 
-          noturnas em regiões com menor fator de emissão e 
-          reduzir picos térmicos com pré-resfriamento inteligente. 
-          Zona B2 requer atenção: PUE 1.71 acima da meta corporativa." />
-        </Animated.View>
-
-        <Animated.View entering={FadeInDown.duration(420).delay(240)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14, paddingHorizontal: 20 }}>
-          <View style={{ flex: 1 }}>
-            <OrbitButton label={exporting ? 'Gerando PDF…' : 'Exportar PDF'} onPress={handleExport} loading={exporting} style={{ shadowColor: colors.glowGreen }} />
-          </View>
-
-          <Pressable onPress={handleShare} style={{ width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: shareBg, borderWidth: StyleSheet.hairlineWidth, borderColor: shareBorder }}>
-            <Share2 size={16} color={colors.softWhite} />
-          </Pressable>
-        </Animated.View>
-        <View style={{ height: 110 }} />
-      </ScrollView>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  root:    { flex: 1 },
-  content: { paddingTop: 40, paddingHorizontal: 20 },
-  section: { marginBottom: 14 },
-});
+import { LinearGradient } from 'expo-linear-gradient';import React, { useCallback, useEffect, useMemo, useState } from 'react';import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withTiming, interpolate, Easing } from 'react-native-reanimated';import { Share2, TrendingDown, Leaf, Zap, Award, BarChart3, Calendar, ChevronDown, ChevronUp } from 'lucide-react-native';import { AIRecommendationCard } from '../../components/AIRecommendationCard';import { AnimatedHeader }       from '../../components/AnimatedHeader';import { EnergyChart }          from '../../components/EnergyChart';import { OrbitButton }          from '../../components/OrbitButton';import { PremiumCard }          from '../../components/PremiumCard';import { useColors }            from '../../constants/Colors';import { reportsApi }           from '../../services/orbitApi';import { useThemeStore }        from '../../store/theme';import type { SustainabilityScoreResponse } from '../../types/api';type Period = '7d' | '30d' | '90d';type ESGMetric = { id: string; label: string; value: string; subValue: string; delta: string; positive: boolean; icon: React.ReactNode };function buildSeries(base: number, len = 14): number[] {  return Array.from({ length: len }, (_, i) =>    Math.round(base + Math.sin(i / 2) * base * 0.03 + (i % 3 === 0 ? base * 0.015 : 0)),  );}function reductionPct(before: number, after: number): string {  if (before <= 0) return '0%';  return `${Math.abs(Math.round(((before - after) / before) * 100))}%`;}const SCORE_TONE: Record<string, string> = { 'A+': '#22C55E', 'A': '#3B82F6', 'B+': '#F59E0B' };const PeriodSelector = React.memo(function PeriodSelector({ selected, onChange }: { selected: Period; onChange: (p: Period) => void }) {  const colors = useColors();  const mode   = useThemeStore((s) => s.mode);  const chipBg     = mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';  const chipBorder = mode === 'dark' ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.10)';  return (    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 }}>      <Calendar size={13} color={colors.premiumGray} />      <Text style={{ color: colors.premiumGray, fontFamily: 'Inter_400Regular', fontSize: 12 }}>Período:</Text>      {(['7d','30d','90d'] as Period[]).map((key) => (        <Pressable key={key} onPress={() => onChange(key)}          style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: StyleSheet.hairlineWidth,            backgroundColor: selected === key ? `${colors.spaceBlue}22` : chipBg,            borderColor:     selected === key ? colors.spaceBlue : chipBorder }}>          <Text style={{ color: selected === key ? colors.softWhite : colors.premiumGray, fontFamily: 'Inter_500Medium', fontSize: 12 }}>            {key === '7d' ? '7 dias' : key === '30d' ? '30 dias' : '90 dias'}          </Text>        </Pressable>      ))}    </View>  );});const ScoreCard = React.memo(function ScoreCard({ score, carbonReduction, energySaving, series, seriesBefore }: { score: string; carbonReduction: string; energySaving: string; series: number[]; seriesBefore: number[] }) {  const colors     = useColors();  const mode       = useThemeStore((s) => s.mode);  const scoreTone  = SCORE_TONE[score] ?? colors.spaceBlue;  const [showBefore, setShowBefore] = useState(false);  const activeSeries = showBefore ? seriesBefore : series;  const avg = Math.round(activeSeries.reduce((a, b) => a + b, 0) / activeSeries.length);  const min = Math.min(...activeSeries);  const max = Math.max(...activeSeries);  const dividerColor  = mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';  const borderColor   = mode === 'dark' ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';  return (    <PremiumCard>      <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>        <View style={{ flex: 1 }}>          <Text style={{ color: colors.premiumGray, fontFamily: 'Inter_500Medium', fontSize: 12, marginBottom: 6 }}>Pontuação Sustentável</Text>          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>            <Award size={16} color={scoreTone} />            <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 40, lineHeight: 42, letterSpacing: -0.5, color: scoreTone }}>{score}</Text>          </View>        </View>        <View style={{ gap: 10, alignItems: 'flex-end' }}>          {[{ color: colors.neonGreen, icon: <Leaf size={12} color={colors.neonGreen} />,           val: `-${carbonReduction}`, label: 'CO₂', bg: `${colors.neonGreen}18`, border: `${colors.neonGreen}30` },            { color: colors.spaceBlue, icon: <Zap  size={12} color={colors.spaceBlue} />,             val: `-${energySaving}`,  label: 'Energia', bg: `${colors.spaceBlue}18`, border: `${colors.spaceBlue}30` }          ].map((m) => (            <View key={m.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>              <View style={{ width: 24, height: 24, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: m.bg, borderWidth: StyleSheet.hairlineWidth, borderColor: m.border }}>{m.icon}</View>              <View>                <Text style={{ color: m.color, fontFamily: 'Inter_700Bold', fontSize: 13 }}>{m.val}</Text>                <Text style={{ color: colors.premiumGray, fontFamily: 'Inter_400Regular', fontSize: 10 }}>{m.label}</Text>              </View>            </View>          ))}        </View>      </View>      <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: dividerColor, marginBottom: 14 }} />      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>          <View style={{ width: 6, height: 6, borderRadius: 999, backgroundColor: showBefore ? colors.danger : colors.spaceBlue }} />          <Text style={{ color: colors.premiumGray, fontFamily: 'Inter_400Regular',             fontSize: 11 }}>{showBefore ? 'Antes da otimização' : 'Após otimização'}</Text>        </View>        <Pressable onPress={() => setShowBefore(v => !v)}          style={{ flexDirection: 'row', alignItems: 'center', gap: 5,           paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, backgroundColor: `${colors.spaceBlue}18`,           borderWidth: StyleSheet.hairlineWidth, borderColor: `${colors.spaceBlue}35` }}>          <BarChart3 size={12} color={colors.spaceBlue} />          <Text style={{ color: colors.spaceBlue, fontFamily: 'Inter_500Medium', fontSize: 11 }}>{showBefore ? 'Ver depois' : 'Ver antes'}</Text>        </Pressable>      </View>      <EnergyChart points={activeSeries} />      <View style={{ flexDirection: 'row', marginTop: 12, paddingTop: 12,         borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: borderColor }}>        {[{ label: 'Mín', val: `${min} kW`, color: colors.softWhite },          { label: 'Média', val: `${avg} kW`, color: colors.spaceBlue, center: true },          { label: 'Máx', val: `${max} kW`, color: colors.warning }        ].map((s) => (          <View key={s.label} style={[{ flex: 1 }, s.center && { alignItems: 'center', borderLeftWidth: StyleSheet.hairlineWidth, borderRightWidth: StyleSheet.hairlineWidth, borderColor }]}>            <Text style={{ color: colors.premiumGray, fontFamily: 'Inter_400Regular', fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.06, marginBottom: 2 }}>{s.label}</Text>            <Text style={{ color: s.color, fontFamily: 'Inter_700Bold', fontSize: 13 }}>{s.val}</Text>          </View>        ))}      </View>    </PremiumCard>  );});const ESGBreakdown = React.memo(function ESGBreakdown({ metrics }: { metrics: ESGMetric[] }) {  const colors  = useColors();  const mode    = useThemeStore((s) => s.mode);  const [expanded, setExpanded] = useState(false);  const visible   = expanded ? metrics : metrics.slice(0, 3);  const borderC   = mode === 'dark' ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';  const iconBg    = mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';  const iconBorder= mode === 'dark' ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.08)';  return (    <PremiumCard>      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 }}>        <TrendingDown size={14} color={colors.neonGreen} />        <Text style={{ color: colors.softWhite, fontFamily: 'Inter_600SemiBold', fontSize: 14, flex: 1 }}>Métricas ESG</Text>      </View>      {visible.map((m, i) => (        <Animated.View key={m.id} entering={FadeInDown.duration(280).delay(i * 50)}          style={[{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11 }, i < visible.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: borderC }]}>          <View style={{ width: 28, height: 28, borderRadius: 10, alignItems: 'center', justifyContent: 'center',             backgroundColor: iconBg, borderWidth: StyleSheet.hairlineWidth, borderColor: iconBorder }}>{m.icon}</View>          <View style={{ flex: 1 }}>            <Text style={{ color: colors.softWhite, fontFamily: 'Inter_500Medium', fontSize: 13 }}>{m.label}</Text>            <Text style={{ color: colors.premiumGray, fontFamily: 'Inter_400Regular', fontSize: 10, marginTop: 2 }}>{m.subValue}</Text>          </View>          <View style={{ alignItems: 'flex-end' }}>            <Text style={{ color: colors.softWhite, fontFamily: 'Inter_700Bold', fontSize: 13 }}>{m.value}</Text>            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 11, marginTop: 2,               color: m.positive ? colors.neonGreen : colors.danger }}>{m.delta}</Text>          </View>        </Animated.View>      ))}      {metrics.length > 3 && (        <Pressable onPress={() => setExpanded(v => !v)}          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5,           paddingTop: 12, marginTop: 4, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: borderC }}>          {expanded ? <ChevronUp size={14} color={colors.spaceBlue} /> : <ChevronDown size={14} color={colors.spaceBlue} />}          <Text style={{ color: colors.spaceBlue, fontFamily: 'Inter_500Medium',             fontSize: 12 }}>{expanded ? 'Ver menos' : `Ver mais ${metrics.length - 3} métricas`}</Text>        </Pressable>      )}    </PremiumCard>  );});export default function ReportsScreen() {  const colors = useColors();  const mode   = useThemeStore((s) => s.mode);  const [period,    setPeriod]    = useState<Period>('7d');  const [exporting, setExporting] = useState(false);  const [apiData,   setApiData]   = useState<SustainabilityScoreResponse | null>(null);  useEffect(() => {    reportsApi.getSustainabilityScore()      .then((res) => setApiData(res.data))      .catch(() => {  });  }, []);  const score          = apiData?.esgGrade ?? 'A+';  const carbonReduction = apiData    ? reductionPct(apiData.beforeOrbitX.carbonEmissionTons, apiData.afterOrbitX.carbonEmissionTons)    : '18%';  const energySaving   = apiData    ? reductionPct(apiData.beforeOrbitX.averageEnergyKwh, apiData.afterOrbitX.averageEnergyKwh)    : '12%';  const series         = apiData ? buildSeries(apiData.afterOrbitX.averageEnergyKwh)  : [420,435,428,441,415,408,412,419,430,422,410,418,425,416];  const seriesBefore   = apiData ? buildSeries(apiData.beforeOrbitX.averageEnergyKwh) : [480,495,488,501,475,468,472,479,490,482,470,478,485,476];  const periodLabels: Record<Period, string> = {    '7d': 'Últimos 7 dias', '30d': 'Últimos 30 dias', '90d': 'Últimos 90 dias',  };  const periodLabel = periodLabels[period];  const handleExport = useCallback(async () => {    setExporting(true);    try {      await reportsApi.exportPdf();      Alert.alert('Relatório exportado', `Relatório ESG (${periodLabel}) gerado com sucesso.\n\nArquivo: OrbitX_ESG_Report_${period}.pdf`, [{ text: 'OK' }]);    } catch (e: any) {      Alert.alert('Orbit X', e?.message ?? 'Falha ao gerar o PDF.');    } finally {      setExporting(false);    }  }, [period, periodLabel]);  const handleShare = useCallback(async () => {    try {      await Share.share({        title:   `OrbitX ESG Report — ${periodLabel}`,        message: `OrbitX ESG Report — ${periodLabel}\n\nSustainable Score: ${score}\nRedução de carbono: ${carbonReduction}\nEconomia energética: ${energySaving}\n\nGerado via OrbitX`,      });    } catch {}  }, [periodLabel, score, carbonReduction, energySaving]);  const esgMetrics: ESGMetric[] = useMemo(() => [    {      id: 'carbon', label: 'Offset de carbono',      value: apiData ? `${Number(apiData.carbonOffsetTons).toFixed(2)} tCO₂e` : '—',      subValue: `Acumulado • ${periodLabel}`, delta: `-${carbonReduction}`, positive: true,      icon: <Leaf size={13} color={colors.neonGreen} />,    },    {      id: 'energy', label: 'Energia economizada',      value: apiData ? `${Math.round(Number(apiData.energySavedKwhAccumulated)).toLocaleString('pt-BR')} kWh` : '—',      subValue: `Acumulado desde ativação`, delta: `-${energySaving}`, positive: true,      icon: <Zap size={13} color={colors.spaceBlue} />,    },    {      id: 'pue', label: 'PUE médio (pós-otimização)',      value: apiData ? apiData.afterOrbitX.averagePue.toFixed(2) : '—',      subValue: `Meta: ≤ 1.40 • Antes: ${apiData ? apiData.beforeOrbitX.averagePue.toFixed(2) : '—'}`,      delta: apiData ? `${(apiData.afterOrbitX.averagePue - apiData.beforeOrbitX.averagePue).toFixed(2)}` : '—',      positive: apiData ? apiData.afterOrbitX.averagePue < apiData.beforeOrbitX.averagePue : true,      icon: <BarChart3 size={13} color={colors.warning} />,    },    {      id: 'renewable', label: 'Energia renovável',      value: apiData ? `${apiData.renewableEnergyPercent.toFixed(0)}%` : '—',      subValue: 'Matriz da frota global', delta: '+0pp', positive: true,      icon: <Leaf size={13} color={colors.neonGreen} />,    },    {      id: 'cooling', label: 'Eficiência de resfriamento',      value: apiData ? `${apiData.afterOrbitX.coolingEfficiencyPercent.toFixed(1)}%` : '—',      subValue: `Antes: ${apiData ? apiData.beforeOrbitX.coolingEfficiencyPercent.toFixed(1) : '—'}%`,      delta: apiData ? `+${(apiData.afterOrbitX.coolingEfficiencyPercent - apiData.beforeOrbitX.coolingEfficiencyPercent).toFixed(1)}pp` : '—',      positive: true,      icon: <Award size={13} color={colors.softWhite} />,    },  ], [apiData, periodLabel, carbonReduction, energySaving, colors]);  const gradientColors: [string, string, string] = mode === 'dark'    ? [colors.deepBlack, 'rgba(34,197,94,0.07)', colors.deepBlack]    : [colors.deepBlack, 'rgba(34,197,94,0.03)', colors.deepBlack];  const shareBg     = mode === 'dark' ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';  const shareBorder = mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.10)';  return (    <View style={[styles.root, { backgroundColor: colors.deepBlack }]}>      <LinearGradient colors={gradientColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>        <AnimatedHeader title="Métricas" subtitle="Economia energética • ESG • comparativo antes/depois" />        <Animated.View entering={FadeInDown.duration(380)} style={styles.section}><PeriodSelector selected={period} onChange={setPeriod} /></Animated.View>        <Animated.View entering={FadeInDown.duration(420).delay(60)} style={styles.section}>          <ScoreCard score={score} carbonReduction={carbonReduction} energySaving={energySaving} series={series} seriesBefore={seriesBefore} />        </Animated.View>        <Animated.View entering={FadeInDown.duration(420).delay(120)} style={styles.section}><ESGBreakdown metrics={esgMetrics} /></Animated.View>        <Animated.View entering={FadeInDown.duration(420).delay(180)} style={styles.section}>          <AIRecommendationCard            title="ESG Insight"            impactLabel={apiData ? `-${carbonReduction} CO₂` : '—'}            body={              apiData                ? `Score ESG: ${apiData.esgScore}/100 (${apiData.esgGrade}). ` +                  `Offset acumulado: ${Number(apiData.carbonOffsetTons).toFixed(2)} tCO₂e. ` +                  `Renováveis: ${apiData.renewableEnergyPercent.toFixed(0)}%. ` +                  `Resfriamento pós-otimização: ${apiData.afterOrbitX.coolingEfficiencyPercent.toFixed(1)}%.`                : 'Carregando análise ESG…'            }          />        </Animated.View>        <Animated.View entering={FadeInDown.duration(420).delay(240)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14, paddingHorizontal: 20 }}>          <View style={{ flex: 1 }}>            <OrbitButton label={exporting ? 'Gerando PDF…' : 'Exportar PDF'} onPress={handleExport} loading={exporting} style={{ shadowColor: colors.glowGreen }} />          </View>          <Pressable onPress={handleShare} style={{ width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: shareBg, borderWidth: StyleSheet.hairlineWidth, borderColor: shareBorder }}>            <Share2 size={16} color={colors.softWhite} />          </Pressable>        </Animated.View>        <View style={{ height: 110 }} />      </ScrollView>    </View>  );}const styles = StyleSheet.create({  root:    { flex: 1 },  content: { paddingTop: 40, paddingHorizontal: 20 },  section: { marginBottom: 14 },});

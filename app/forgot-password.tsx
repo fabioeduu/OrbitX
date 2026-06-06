@@ -1,35 +1,40 @@
-import { LinearGradient } from "expo-linear-gradient";
+﻿import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { KeyRound, Mail } from "lucide-react-native";
+import { ChevronLeft, KeyRound, Mail } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
-import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
-
+import {
+  Alert,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { OrbitButton } from "../components/OrbitButton";
 import { PremiumCard } from "../components/PremiumCard";
 import { OrbitColors } from "../constants/Colors";
-
+import { authApi } from "../services/orbitApi";
 export default function ForgotPasswordScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-
   const canSubmit = useMemo(() => email.trim().length > 3, [email]);
-
   const onSubmit = async () => {
     if (!canSubmit) return;
     setLoading(true);
     try {
-      await new Promise((r) => setTimeout(r, 900));
+      await authApi.forgotPassword({ email: email.trim() });
       Alert.alert(
-        "Recuperação (simulada)",
-        "Se este email existir, enviaremos um link.",
+        "Orbit X",
+        "Se esse e-mail estiver cadastrado, enviaremos o link de recuperação.",
       );
       router.back();
+    } catch (e: any) {
+      Alert.alert("Orbit X", e?.message ?? "Não foi possível enviar o link.");
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <View style={styles.root}>
       <LinearGradient
@@ -43,8 +48,14 @@ export default function ForgotPasswordScreen() {
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-
       <View style={styles.header}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={12}
+          style={styles.backBtn}
+        >
+          <ChevronLeft size={18} color={OrbitColors.softWhite} />
+        </Pressable>
         <View style={styles.badge}>
           <KeyRound size={16} color={OrbitColors.spaceBlue} />
           <Text style={styles.badgeText}>Recuperação de Conta</Text>
@@ -54,7 +65,6 @@ export default function ForgotPasswordScreen() {
           Informe seu email para recuperar o acesso.
         </Text>
       </View>
-
       <View style={styles.body}>
         <PremiumCard>
           <Text style={styles.label}>E-mail</Text>
@@ -70,7 +80,6 @@ export default function ForgotPasswordScreen() {
               style={styles.input}
             />
           </View>
-
           <View style={{ marginTop: 16 }} />
           <OrbitButton
             label="Enviar link"
@@ -83,10 +92,20 @@ export default function ForgotPasswordScreen() {
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: OrbitColors.deepBlack },
-  header: { paddingTop: 70, paddingHorizontal: 22, paddingBottom: 18 },
+  header: { paddingTop: 60, paddingHorizontal: 22, paddingBottom: 18 },
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.07)",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(255,255,255,0.12)",
+    marginBottom: 20,
+  },
   badge: {
     flexDirection: "row",
     alignItems: "center",

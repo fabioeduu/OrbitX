@@ -17,8 +17,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AnimatedHeader } from "../../components/AnimatedHeader";
 import { GlassContainer } from "../../components/GlassContainer";
 import { useColors } from "../../constants/Colors";
+import { assistantApi } from "../../services/orbitApi";
 import { useThemeStore } from "../../store/theme";
-import { sendToNvidia, type ChatMessage } from "../../utils/nvidiaAI";
+import { sleep } from "../../utils/sleep";
 
 type Role = "user" | "assistant";
 
@@ -135,37 +136,40 @@ export default function AssistantScreen() {
 
   const send = useCallback(async (text: string) => {
     const value = text.trim();
+
     if (!value) return;
 
-    setError(null);
     setMessages((prev) => [
-      { id: `u-${Date.now()}`, role: "user", text: value },
+      {
+        id: `u-${Date.now()}`,
+        role: "user",
+        text: value,
+      },
       ...prev,
     ]);
+
     setInput("");
     setTyping(true);
 
-    try {
-      const reply = await sendToNvidia(historyRef.current, value);
+    await sleep(650);
 
-      historyRef.current = [
-        ...historyRef.current,
-        { role: "user", content: value },
-        { role: "assistant", content: reply },
-      ];
+    setMessages((prev) => [
+      {
+        id: `a-${Date.now()}`,
+        role: "assistant",
+        text: makeReply(value),
+      },
+      ...prev,
+    ]);
 
-      setMessages((prev) => [
-        { id: `a-${Date.now()}`, role: "assistant", text: reply },
-        ...prev,
-      ]);
-    } catch (e: any) {
-      setError(e?.message ?? "Erro ao contatar a API.");
-    } finally {
-      setTyping(false);
-      requestAnimationFrame(() => {
-        listRef.current?.scrollToOffset({ offset: 0, animated: true });
+    setTyping(false);
+
+    requestAnimationFrame(() => {
+      listRef.current?.scrollToOffset({
+        offset: 0,
+        animated: true,
       });
-    }
+    });
   }, []);
 
   const gradientColors: [string, string, string, string] =

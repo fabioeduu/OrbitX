@@ -1,14 +1,13 @@
-
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { Tabs } from "expo-router";
 import {
-    Bot,
-    FileText,
-    LayoutDashboard,
-    LucideIcon,
-    Map as MapIcon,
-    Satellite as SatelliteIcon,
+  Bot,
+  FileText,
+  LayoutDashboard,
+  LucideIcon,
+  Map as MapIcon,
+  Satellite as SatelliteIcon,
 } from "lucide-react-native";
 import React, { useEffect, useRef } from "react";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
@@ -16,7 +15,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useColors } from "../../constants/Colors";
 import { useThemeStore } from "../../store/theme";
-
 
 const icons = {
   dashboard: LayoutDashboard,
@@ -27,7 +25,6 @@ const icons = {
 } as const;
 
 type RouteName = keyof typeof icons;
-
 
 export default function TabsLayout() {
   return (
@@ -43,7 +40,6 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
-
 
 function OrbitTabBar(props: any) {
   const { state, descriptors, navigation } = props;
@@ -121,7 +117,6 @@ function OrbitTabBar(props: any) {
   );
 }
 
-
 function TabItem({
   label,
   focused,
@@ -148,7 +143,10 @@ function TabItem({
 
   const scale = t.interpolate({ inputRange: [0, 1], outputRange: [1, 1.06] });
   const opacity = t.interpolate({ inputRange: [0, 1], outputRange: [0.75, 1] });
-  const pillOpacity = t.interpolate({ inputRange: [0, 1], outputRange: [0, 1] });
+  const pillOpacity = t.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
 
   const iconWrapBg = mode === "dark" ? "rgba(0,0,0,0.18)" : "rgba(0,0,0,0.06)";
   const iconWrapBorder =
@@ -156,7 +154,9 @@ function TabItem({
 
   return (
     <Pressable onPress={onPress} style={styles.item}>
-      <Animated.View style={[styles.itemInner, { transform: [{ scale }], opacity }]}>
+      <Animated.View
+        style={[styles.itemInner, { transform: [{ scale }], opacity }]}
+      >
         <Animated.View style={[styles.pill, { opacity: pillOpacity }]}>
           <LinearGradient
             colors={[colors.glowBlue, colors.glowGreen]}
@@ -191,7 +191,6 @@ function TabItem({
     </Pressable>
   );
 }
-
 
 const styles = StyleSheet.create({
   shell: { position: "absolute", left: 14, right: 14 },

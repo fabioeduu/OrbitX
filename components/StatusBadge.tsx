@@ -1,73 +1,1 @@
-import React from "react";
-import { StyleSheet, Text, View } from "react-native";
-
-import { OrbitColors } from "../constants/Colors";
-
-type Tone = "blue" | "green" | "gray" | "danger" | "warning";
-
-type Props = {
-  label: string;
-  tone?: Tone;
-};
-
-const toneMap: Record<Tone, { bg: string; fg: string; border: string }> = {
-  blue: {
-    bg: "rgba(59,130,246,0.18)",
-    fg: OrbitColors.softWhite,
-    border: "rgba(59,130,246,0.35)",
-  },
-  green: {
-    bg: "rgba(34,197,94,0.16)",
-    fg: OrbitColors.softWhite,
-    border: "rgba(34,197,94,0.33)",
-  },
-  gray: {
-    bg: "rgba(154,164,178,0.14)",
-    fg: OrbitColors.softWhite,
-    border: "rgba(154,164,178,0.28)",
-  },
-  danger: {
-    bg: "rgba(239,68,68,0.16)",
-    fg: OrbitColors.softWhite,
-    border: "rgba(239,68,68,0.3)",
-  },
-  warning: {
-    bg: "rgba(245,158,11,0.14)",
-    fg: OrbitColors.softWhite,
-    border: "rgba(245,158,11,0.28)",
-  },
-};
-
-export function StatusBadge({ label, tone = "gray" }: Props) {
-  const t = toneMap[tone];
-  return (
-    <View
-      style={[styles.badge, { backgroundColor: t.bg, borderColor: t.border }]}
-    >
-      <View style={[styles.dot, { backgroundColor: t.border }]} />
-      <Text style={[styles.text, { color: t.fg }]}>{label}</Text>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  badge: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 7,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 999,
-    marginRight: 8,
-  },
-  text: {
-    fontFamily: "Inter_500Medium",
-    fontSize: 12,
-    letterSpacing: 0.2,
-  },
-});
+import React from "react";import { StyleSheet, Text, View } from "react-native";import { OrbitColors } from "../constants/Colors";type Tone = "blue" | "green" | "gray" | "danger" | "warning";type Props = {  label: string;  tone?: Tone;};const toneMap: Record<Tone, { bg: string; fg: string; border: string }> = {  blue: {    bg: "rgba(59,130,246,0.18)",    fg: OrbitColors.softWhite,    border: "rgba(59,130,246,0.35)",  },  green: {    bg: "rgba(34,197,94,0.16)",    fg: OrbitColors.softWhite,    border: "rgba(34,197,94,0.33)",  },  gray: {    bg: "rgba(154,164,178,0.14)",    fg: OrbitColors.softWhite,    border: "rgba(154,164,178,0.28)",  },  danger: {    bg: "rgba(239,68,68,0.16)",    fg: OrbitColors.softWhite,    border: "rgba(239,68,68,0.3)",  },  warning: {    bg: "rgba(245,158,11,0.14)",    fg: OrbitColors.softWhite,    border: "rgba(245,158,11,0.28)",  },};export function StatusBadge({ label, tone = "gray" }: Props) {  const t = toneMap[tone];  return (    <View      style={[styles.badge, { backgroundColor: t.bg, borderColor: t.border }]}    >      <View style={[styles.dot, { backgroundColor: t.border }]} />      <Text style={[styles.text, { color: t.fg }]}>{label}</Text>    </View>  );}const styles = StyleSheet.create({  badge: {    flexDirection: "row",    alignItems: "center",    paddingVertical: 7,    paddingHorizontal: 10,    borderRadius: 999,    borderWidth: StyleSheet.hairlineWidth,  },  dot: {    width: 6,    height: 6,    borderRadius: 999,    marginRight: 8,  },  text: {    fontFamily: "Inter_500Medium",    fontSize: 12,    letterSpacing: 0.2,  },});
