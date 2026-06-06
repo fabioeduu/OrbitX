@@ -19,7 +19,7 @@ import { GlassContainer } from "../../components/GlassContainer";
 import { useColors } from "../../constants/Colors";
 import { assistantApi } from "../../services/orbitApi";
 import { useThemeStore } from "../../store/theme";
-import { sleep } from "../../utils/sleep";
+import type { ChatMessage } from "../../types/api";
 
 type Role = "user" | "assistant";
 
@@ -136,40 +136,36 @@ export default function AssistantScreen() {
 
   const send = useCallback(async (text: string) => {
     const value = text.trim();
-
     if (!value) return;
 
     setMessages((prev) => [
-      {
-        id: `u-${Date.now()}`,
-        role: "user",
-        text: value,
-      },
+      { id: `u-${Date.now()}`, role: "user", text: value },
       ...prev,
     ]);
-
     setInput("");
     setTyping(true);
+    setError(null);
 
-    await sleep(650);
-
-    setMessages((prev) => [
-      {
-        id: `a-${Date.now()}`,
-        role: "assistant",
-        text: makeReply(value),
-      },
-      ...prev,
-    ]);
-
-    setTyping(false);
-
-    requestAnimationFrame(() => {
-      listRef.current?.scrollToOffset({
-        offset: 0,
-        animated: true,
+    try {
+      const res = await assistantApi.chat({
+        message: value,
+        history: historyRef.current,
       });
-    });
+
+      historyRef.current = res.data.updatedHistory;
+
+      setMessages((prev) => [
+        { id: `a-${Date.now()}`, role: "assistant", text: res.data.response },
+        ...prev,
+      ]);
+    } catch {
+      setError("Erro ao conectar com a Orbit AI. Tente novamente.");
+    } finally {
+      setTyping(false);
+      requestAnimationFrame(() => {
+        listRef.current?.scrollToOffset({ offset: 0, animated: true });
+      });
+    }
   }, []);
 
   const gradientColors: [string, string, string, string] =

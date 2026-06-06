@@ -72,7 +72,7 @@ export default function RegisterScreen() {
       <View style={styles.header}>
         <View style={styles.badge}>
           <ShieldCheck size={16} color={OrbitColors.spaceBlue} />
-          <Text style={styles.badgeText}>Enterprise Registration</Text>
+          <Text style={styles.badgeText}>Registro Empresarial</Text>
         </View>
         <Text style={styles.title}>Cadastro</Text>
         <Text style={styles.subtitle}>

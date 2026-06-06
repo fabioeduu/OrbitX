@@ -29,6 +29,7 @@ type AuthState = {
   }) => Promise<void>;
   logout: () => Promise<void>;
 };
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -58,7 +59,9 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoadingAuth: false });
         }
       },
-      register: async ({ companyName, taxId, adminName, email, password }) => {
+
+
+     register: async ({ companyName, taxId, adminName, email, password }) => {
         set({ isLoadingAuth: true });
         try {
           const { data } = await authApi.register({
@@ -80,6 +83,11 @@ export const useAuthStore = create<AuthState>()(
               role:        user.role,
             },
           });
+          
+        } catch (error: any) {
+          console.log('Status:', error?.response?.status);
+          console.log('Data:', JSON.stringify(error?.response?.data));
+          throw error;
         } finally {
           set({ isLoadingAuth: false });
         }
