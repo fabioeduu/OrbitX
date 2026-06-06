@@ -223,6 +223,8 @@ orbit-x-backend/
 
 Documentação interativa: https://orbitx-api-ve63.onrender.com/swagger-ui/index.html
 
+API: https://orbitx-api-ve63.onrender.com/
+
 ---
 
 ## Vídeo Demonstração
