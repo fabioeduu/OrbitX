@@ -41,6 +41,17 @@ export default function RegisterScreen() {
       password.length >= 8,
     [companyName, taxId, adminName, email, password],
   );
+
+  const formatCnpj = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 14);
+
+  return digits
+    .replace(/^(\d{2})(\d)/, "$1.$2")
+    .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+    .replace(/\.(\d{3})(\d)/, ".$1/$2")
+    .replace(/(\d{4})(\d)/, "$1-$2");
+};
+
   const onSubmit = async () => {
     if (!canSubmit) return;
     try {
@@ -100,7 +111,7 @@ export default function RegisterScreen() {
             <Hash size={16} color={OrbitColors.premiumGray} />
             <TextInput
               value={taxId}
-              onChangeText={setTaxId}
+              onChangeText={(value) => setTaxId(formatCnpj(value))}
               placeholder="00.000.000/0001-00"
               placeholderTextColor="rgba(154,164,178,0.6)"
               keyboardType="numeric"
