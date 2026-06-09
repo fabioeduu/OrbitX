@@ -229,7 +229,9 @@ API: https://orbitx-api-ve63.onrender.com/
 
 ## Vídeo Demonstração
 
-YouTube: [Adicionar link do vídeo]
+Video do aplicativo em funcionamento, apresentando as principais funcionalidades e a interface do usuário.
+
+- YouTube: https://youtu.be/B572_KBHN4o
 
 ---
 

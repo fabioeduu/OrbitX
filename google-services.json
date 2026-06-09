@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "926491558499",
+    "project_id": "orbitx-7dd50",
+    "storage_bucket": "orbitx-7dd50.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:926491558499:android:b7aced52efa8f17dedee56",
+        "android_client_info": {
+          "package_name": "com.fernandopa12.OrbitX"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD9h1rIFL-1JULfMgkBytumTo8Fj9UsblQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
