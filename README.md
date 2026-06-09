@@ -235,6 +235,14 @@ Video do aplicativo em funcionamento, apresentando as principais funcionalidades
 
 ---
 
+## Link do Protótipo
+
+- link: https://expo.dev/artifacts/eas/4zdgiG14NCynKUkRb94grg.aab
+
+## link do apk no google drive
+
+- link: https://drive.google.com/file/d/1XD0yz7jMSIX_P_ceRE_RncvujEAo3Avk/view?usp=sharing
+
 ## Repositório
 
 GitHub: https://github.com/fabioeduu/OrbitX
